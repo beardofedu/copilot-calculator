@@ -1519,8 +1519,24 @@ function calculate() {
       mirroredRows.push({ ghLabel: r.model.label, antModel, mapping, r });
     });
 
+    // ── Also mirror Direct AI Credit rows (if enabled) ──────────
+    const mirroredCreditRows = [];
+    if ($('ghDirectCreditsEnabled').checked) {
+      readGhCreditRows().forEach(cr => {
+        const mapping = GH_TO_ANT_MAP[cr.model.id];
+        if (!mapping) return;
+        const antModel = ANTHROPIC_MODELS[mapping.key];
+        if (!antModel) return;
+        // Credits → USD on the GH side; used as a proxy dollar amount for Anthropic.
+        // We don't have token-level detail from credit entries, so we carry forward
+        // the raw GH dollar equivalent as the estimated Anthropic cost.
+        const ghEquivUSD = applyDiscount(cr.credits * 0.01, antTokenDiscPct);
+        mirroredCreditRows.push({ ghLabel: cr.model.label, antModel, mapping, credits: cr.credits, ghEquivUSD });
+      });
+    }
+
     // Render mirrored rows
-    $('antMirroredContainer').innerHTML = mirroredRows.length
+    const tokenSection = mirroredRows.length
       ? mirroredRows.map(({ ghLabel, antModel, mapping, r }) => {
           const inputCost      = applyDiscount(r.inputM      * antModel.input,       antTokenDiscPct);
           const cachedCost     = applyDiscount(r.cachedM     * antModel.cachedInput,  antTokenDiscPct);
@@ -1545,8 +1561,35 @@ function calculate() {
             </div>
           </div>`;
         }).join('')
+      : '';
+
+    const creditSection = mirroredCreditRows.length
+      ? `<div style="font-size:11px;color:var(--muted);padding:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;border-top:1px solid var(--border);margin-top:6px">
+           ⚠ Direct AI Credit Usage (mirrored) — no token breakdown available; GH dollar equivalent used as proxy
+         </div>` +
+        mirroredCreditRows.map(({ ghLabel, antModel, mapping, credits, ghEquivUSD }) => {
+          antTokenTotal += ghEquivUSD;
+          antModelSummaries.push({ label: antModel.label, ghLabel, how: mapping.how + ' · credit-derived', rowTotal: ghEquivUSD, creditProxy: true, credits });
+          return `<div class="mirror-row">
+            <div class="mirror-row-header">
+              <span class="gh-label">${ghLabel}</span>
+              <span class="arrow">→</span>
+              <span class="ant-label">${antModel.label}</span>
+              <span class="map-badge">${mapping.how} · credit-derived</span>
+            </div>
+            <div class="mirror-row-cost">
+              <span class="cost-item">GH credits: ${fmtCred(credits)}</span>
+              <span class="cost-item">GH equiv: ${fmt(credits * 0.01)}</span>
+              <span class="cost-total">${fmt(ghEquivUSD)} proxy</span>
+            </div>
+          </div>`;
+        }).join('')
+      : '';
+
+    $('antMirroredContainer').innerHTML = (tokenSection || creditSection)
+      ? tokenSection + creditSection
       : `<div style="font-size:13px;color:var(--muted);padding:10px 0">
-           Add model rows on the GitHub Copilot side to see mirrored estimates here.
+           Add model rows or direct credit entries on the GitHub Copilot side to see mirrored estimates here.
          </div>`;
 
   } else {
@@ -1592,9 +1635,17 @@ function calculate() {
     antHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">
       ${antMirrorOn ? '⚠ Estimated API Token Usage (mirrored)' : 'API Token Usage'}</div>`;
     antModelSummaries.forEach(s => {
-      const rowLabel = antMirrorOn && s.ghLabel ? `${s.antLabel || s.label} ← ${s.ghLabel}` : s.label;
-      antHTML += brow(s.label + (antMirrorOn && s.ghLabel ? ` <span style="color:var(--muted);font-size:11px">(from ${s.ghLabel})</span>` : ''), fmt(s.rowTotal));
-      antHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}  CW: ${fmt(s.cacheWriteCost)}  Out: ${fmt(s.outputCost)}`, '', '');
+      if (s.creditProxy) {
+        antHTML += brow(
+          s.label + ` <span style="color:var(--muted);font-size:11px">(credit proxy from ${s.ghLabel})</span>`,
+          fmt(s.rowTotal)
+        );
+        antHTML += brow(`  ↳ GH credits: ${fmtCred(s.credits)} · GH equiv ${fmt(s.credits * 0.01)} (no token breakdown)`, '', '');
+      } else {
+        antHTML += brow(s.label + (antMirrorOn && s.ghLabel ? ` <span style="color:var(--muted);font-size:11px">(from ${s.ghLabel})</span>` : ''), fmt(s.rowTotal));
+        if (!s.creditProxy)
+          antHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}  CW: ${fmt(s.cacheWriteCost)}  Out: ${fmt(s.outputCost)}`, '', '');
+      }
     });
   }
 
