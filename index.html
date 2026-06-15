@@ -292,6 +292,67 @@
       border-bottom: 1px solid var(--border);
     }
 
+    /* ── Mirror assumption styles ────────────────────────── */
+    .mirror-disclaimer {
+      background: rgba(187,128,9,.12);
+      border: 2px solid rgba(210,153,34,.5);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 12px;
+      color: #e3b341;
+      margin: 12px 0;
+      line-height: 1.6;
+    }
+    .mirror-disclaimer .disc-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mirror-disclaimer ul {
+      margin: 6px 0 0 16px;
+      color: rgba(227,179,65,.85);
+    }
+    .mirror-row {
+      background: rgba(217,119,6,.06);
+      border: 1px solid rgba(217,119,6,.2);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .mirror-row-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(217,119,6,.15);
+      font-size: 12px;
+    }
+    .mirror-row-header .arrow { color: var(--muted); margin: 0 2px; }
+    .mirror-row-header .gh-label { color: var(--muted); }
+    .mirror-row-header .ant-label { color: var(--accent-ant-light); font-weight: 600; }
+    .mirror-row-header .map-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      background: rgba(217,119,6,.2);
+      border-radius: 99px;
+      color: var(--accent-ant-light);
+      margin-left: auto;
+    }
+    .mirror-row-cost {
+      padding: 6px 10px 8px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .mirror-row-cost .cost-total { color: var(--text); font-weight: 600; margin-left: auto; }
+
     /* ── Info banner ─────────────────────────────────────── */
     .info-banner {
       background: rgba(31,111,235,.1);
@@ -727,8 +788,35 @@
           <span style="font-size:11px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">For teams also using the API directly</span>
         </div>
 
-        <div id="antModelRowsContainer"></div>
-        <button class="add-model-btn" onclick="addAntModelRow()">＋ Add another model</button>
+        <!-- Mirror toggle -->
+        <div class="toggle-row" onclick="toggleAntMirror()" style="margin-bottom:10px">
+          <input type="checkbox" id="antMirrorEnabled" />
+          <div>
+            <div class="toggle-label">Assume same usage as GitHub Copilot side</div>
+            <div class="toggle-desc">Maps Copilot token volumes to equivalent Anthropic models for comparison</div>
+          </div>
+        </div>
+
+        <!-- Mirror disclaimer (shown when toggle is on) -->
+        <div id="antMirrorDisclaimer" class="mirror-disclaimer hidden">
+          <div class="disc-title">⚠️ Generic Assumption — Not a Direct Comparison</div>
+          This estimate mirrors token volumes from the GitHub Copilot side and maps each model to a roughly equivalent Anthropic model by tier. It is intended only to generate a <strong style="color:#e3b341">complete illustrative example</strong> and should not be used for vendor selection without independent analysis.
+          <ul>
+            <li>Copilot Anthropic models map directly to their Anthropic API equivalent</li>
+            <li>OpenAI/Google/Microsoft models are mapped by capability tier (lightweight → Haiku, versatile → Sonnet, powerful → Opus)</li>
+            <li>Model capabilities, context windows, quality, and latency differ — cost is not the only variable</li>
+            <li>Cache write costs are estimated using Anthropic's standard rate for all mapped models</li>
+          </ul>
+        </div>
+
+        <!-- Mirrored rows (shown when toggle is on) -->
+        <div id="antMirroredContainer" class="hidden"></div>
+
+        <!-- Manual rows (hidden when mirror is on) -->
+        <div id="antManualRows">
+          <div id="antModelRowsContainer"></div>
+          <button class="add-model-btn" onclick="addAntModelRow()">＋ Add another model</button>
+        </div>
 
         <!-- ── Vendor Discount ── -->
         <div class="section-title">Vendor Discount</div>
@@ -854,6 +942,39 @@ const ANTHROPIC_MODELS = {
   'opus-4.7':   { label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
   'opus-4.8':   { label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
   'fable-5':    { label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+};
+
+// ── Copilot → Anthropic model mapping (by capability tier) ───────────────────
+// Anthropic models in Copilot map directly; others map by tier.
+const GH_TO_ANT_MAP = {
+  // OpenAI
+  gpt5mini:      { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gpt53codex:    { key: 'sonnet-4.6', how: 'tier match (versatile/coder)' },
+  gpt54:         { key: 'sonnet-4.6', how: 'tier match (versatile)' },
+  gpt54lc:       { key: 'sonnet-4.6', how: 'tier match (versatile, long ctx)' },
+  gpt54mini:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gpt54nano:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gpt55:         { key: 'opus-4.8',   how: 'tier match (powerful)' },
+  gpt55lc:       { key: 'opus-4.8',   how: 'tier match (powerful, long ctx)' },
+  // Anthropic — direct equivalents
+  haiku45:       { key: 'haiku-4.5',  how: 'direct equivalent' },
+  sonnet4:       { key: 'sonnet-4',   how: 'direct equivalent' },
+  sonnet45:      { key: 'sonnet-4.5', how: 'direct equivalent' },
+  sonnet46:      { key: 'sonnet-4.6', how: 'direct equivalent' },
+  opus45:        { key: 'opus-4.5',   how: 'direct equivalent' },
+  opus46:        { key: 'opus-4.6',   how: 'direct equivalent' },
+  opus47:        { key: 'opus-4.7',   how: 'direct equivalent' },
+  opus48:        { key: 'opus-4.8',   how: 'direct equivalent' },
+  fable5:        { key: 'fable-5',    how: 'direct equivalent' },
+  // Google
+  gemini25pro:   { key: 'sonnet-4.6', how: 'tier match (powerful)' },
+  gemini3flash:  { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gemini31pro:   { key: 'opus-4.7',   how: 'tier match (powerful)' },
+  gemini31prolc: { key: 'opus-4.7',   how: 'tier match (powerful, long ctx)' },
+  gemini35flash: { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  // GitHub / Microsoft
+  raptormini:    { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  maicodeflash:  { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
 };
 
 // ── Row ID counters ──────────────────────────────────────────────────────────
@@ -1207,6 +1328,15 @@ function toggleGhDirectCredits() {
   calculate();
 }
 
+function toggleAntMirror() {
+  const cb = $('antMirrorEnabled');
+  cb.checked = !cb.checked;
+  $('antMirrorDisclaimer').classList.toggle('hidden', !cb.checked);
+  $('antMirroredContainer').classList.toggle('hidden', !cb.checked);
+  $('antManualRows').classList.toggle('hidden', cb.checked);
+  calculate();
+}
+
 // ── Row Data Reader ───────────────────────────────────────────────────────────
 
 function readGhModelRows() {
@@ -1370,37 +1500,84 @@ function calculate() {
 
   // Update Anthropic seat summary
   const antPlanNames = { '0': 'Free', '20': 'Pro', '30': 'Team' };
-  $('antTotalSeats').textContent    = antSeatUsers.toLocaleString();
+  $('antTotalSeats').textContent      = antSeatUsers.toLocaleString();
   $('antMonthlySeatCost').textContent = fmt(antSeatCostRaw);
-  $('antPlanName').textContent      = antPlanNames[String(antPlanPrice)] || 'Pro';
+  $('antPlanName').textContent        = antPlanNames[String(antPlanPrice)] || 'Pro';
 
-  const antModelRows = readAntModelRows();
+  const antMirrorOn = $('antMirrorEnabled').checked;
   let antTokenTotal = 0;
   const antModelSummaries = [];
 
-  antModelRows.forEach(r => {
-    const inputCost      = applyDiscount(r.inputM      * r.model.input,       antTokenDiscPct);
-    const cachedCost     = applyDiscount(r.cachedM     * r.model.cachedInput,  antTokenDiscPct);
-    const cacheWriteCost = applyDiscount(r.cacheWriteM * r.model.cacheWrite,   antTokenDiscPct);
-    const outputCost     = applyDiscount(r.outputM     * r.model.output,       antTokenDiscPct);
-    const rowTotal       = inputCost + cachedCost + cacheWriteCost + outputCost;
-    antTokenTotal += rowTotal;
-    antModelSummaries.push({ label: r.model.label, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal });
+  if (antMirrorOn) {
+    // ── Mirror mode: map GH model rows → Anthropic equivalents ─
+    const mirroredRows = [];
+    ghModelRows.forEach(r => {
+      const mapping = GH_TO_ANT_MAP[r.model.id];
+      if (!mapping) return;
+      const antModel = ANTHROPIC_MODELS[mapping.key];
+      if (!antModel) return;
+      mirroredRows.push({ ghLabel: r.model.label, antModel, mapping, r });
+    });
 
-    const costEl = $('antrow-' + r.id + '-cost');
-    if (costEl) {
-      costEl.innerHTML = `
-        <span class="cost-item">In: ${fmt(inputCost)}</span>
-        <span class="cost-item">Cached: ${fmt(cachedCost)}</span>
-        <span class="cost-item">CW: ${fmt(cacheWriteCost)}</span>
-        <span class="cost-item">Out: ${fmt(outputCost)}</span>
-        <span class="cost-total">${fmt(rowTotal)}</span>`;
-    }
-  });
+    // Render mirrored rows
+    $('antMirroredContainer').innerHTML = mirroredRows.length
+      ? mirroredRows.map(({ ghLabel, antModel, mapping, r }) => {
+          const inputCost      = applyDiscount(r.inputM      * antModel.input,       antTokenDiscPct);
+          const cachedCost     = applyDiscount(r.cachedM     * antModel.cachedInput,  antTokenDiscPct);
+          const cacheWriteCost = applyDiscount(r.cacheWriteM * antModel.cacheWrite,   antTokenDiscPct);
+          const outputCost     = applyDiscount(r.outputM     * antModel.output,       antTokenDiscPct);
+          const rowTotal       = inputCost + cachedCost + cacheWriteCost + outputCost;
+          antTokenTotal += rowTotal;
+          antModelSummaries.push({ label: antModel.label, ghLabel, how: mapping.how, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal });
+          return `<div class="mirror-row">
+            <div class="mirror-row-header">
+              <span class="gh-label">${ghLabel}</span>
+              <span class="arrow">→</span>
+              <span class="ant-label">${antModel.label}</span>
+              <span class="map-badge">${mapping.how}</span>
+            </div>
+            <div class="mirror-row-cost">
+              <span class="cost-item">In: ${fmt(inputCost)}</span>
+              <span class="cost-item">Cached: ${fmt(cachedCost)}</span>
+              <span class="cost-item">CW: ${fmt(cacheWriteCost)}</span>
+              <span class="cost-item">Out: ${fmt(outputCost)}</span>
+              <span class="cost-total">${fmt(rowTotal)}</span>
+            </div>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:13px;color:var(--muted);padding:10px 0">
+           Add model rows on the GitHub Copilot side to see mirrored estimates here.
+         </div>`;
+
+  } else {
+    // ── Manual mode: use user-entered Anthropic model rows ──────
+    const antModelRows = readAntModelRows();
+    antModelRows.forEach(r => {
+      const inputCost      = applyDiscount(r.inputM      * r.model.input,       antTokenDiscPct);
+      const cachedCost     = applyDiscount(r.cachedM     * r.model.cachedInput,  antTokenDiscPct);
+      const cacheWriteCost = applyDiscount(r.cacheWriteM * r.model.cacheWrite,   antTokenDiscPct);
+      const outputCost     = applyDiscount(r.outputM     * r.model.output,       antTokenDiscPct);
+      const rowTotal       = inputCost + cachedCost + cacheWriteCost + outputCost;
+      antTokenTotal += rowTotal;
+      antModelSummaries.push({ label: r.model.label, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal });
+
+      const costEl = $('antrow-' + r.id + '-cost');
+      if (costEl) {
+        costEl.innerHTML = `
+          <span class="cost-item">In: ${fmt(inputCost)}</span>
+          <span class="cost-item">Cached: ${fmt(cachedCost)}</span>
+          <span class="cost-item">CW: ${fmt(cacheWriteCost)}</span>
+          <span class="cost-item">Out: ${fmt(outputCost)}</span>
+          <span class="cost-total">${fmt(rowTotal)}</span>`;
+      }
+    });
+  }
 
   const antTotal = antSeatCost + antTokenTotal;
 
-  $('antModelTag').textContent = antModelSummaries.map(s => s.label).join(', ').substring(0, 60);
+  $('antModelTag').textContent = antMirrorOn
+    ? '~ mirrored estimate'
+    : antModelSummaries.map(s => s.label).join(', ').substring(0, 60);
 
   let antHTML = '';
   const antPlanLabel = antPlanNames[String(antPlanPrice)] || 'Pro';
@@ -1412,9 +1589,11 @@ function calculate() {
     antHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
 
   if (antModelSummaries.length) {
-    antHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">API Token Usage</div>`;
+    antHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">
+      ${antMirrorOn ? '⚠ Estimated API Token Usage (mirrored)' : 'API Token Usage'}</div>`;
     antModelSummaries.forEach(s => {
-      antHTML += brow(s.label, fmt(s.rowTotal));
+      const rowLabel = antMirrorOn && s.ghLabel ? `${s.antLabel || s.label} ← ${s.ghLabel}` : s.label;
+      antHTML += brow(s.label + (antMirrorOn && s.ghLabel ? ` <span style="color:var(--muted);font-size:11px">(from ${s.ghLabel})</span>` : ''), fmt(s.rowTotal));
       antHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}  CW: ${fmt(s.cacheWriteCost)}  Out: ${fmt(s.outputCost)}`, '', '');
     });
   }
@@ -1422,6 +1601,8 @@ function calculate() {
   if (antTokenDiscPct > 0)
     antHTML += brow(`Token rate discount (${antTokenDiscPct}%)`, '✓', 'discount-row');
   antHTML += brow('Token subtotal', fmt(antTokenTotal));
+  if (antMirrorOn)
+    antHTML += `<div style="font-size:11px;color:#e3b341;padding:4px 0">⚠ Generic assumption — see disclaimer above</div>`;
   antHTML += brow('Monthly Total', fmt(antTotal), 'total-row');
 
   $('antBreakdown').innerHTML = antHTML;
