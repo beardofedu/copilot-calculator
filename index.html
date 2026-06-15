@@ -453,9 +453,88 @@
     .footnote { font-size: 12px; color: var(--muted); margin-top: 16px; }
     .footnote a { color: var(--accent-blue-light); }
     .hidden { display: none; }
+
+    /* ── Tooltip system ──────────────────────────────────── */
+    .tt-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      font-style: normal;
+      cursor: help;
+      margin-left: 4px;
+      vertical-align: middle;
+      flex-shrink: 0;
+      transition: border-color .15s, color .15s;
+      user-select: none;
+    }
+    .tt-icon:hover { border-color: var(--accent-blue-light); color: var(--accent-blue-light); }
+    #tt-global {
+      position: fixed;
+      z-index: 9999;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      min-width: 240px;
+      max-width: 300px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.7);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .12s;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    #tt-global.tt-visible { opacity: 1; pointer-events: auto; }
+    #tt-global .tt-title {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    #tt-global .tt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 3px 0;
+    }
+    #tt-global .tt-lbl { color: var(--muted); }
+    #tt-global .tt-val { font-family: "SFMono-Regular", Consolas, monospace; color: #a5d6ff; white-space: nowrap; }
+    #tt-global .tt-note { color: var(--muted); font-size: 11px; margin-top: 6px; }
+    #tt-global .tt-source {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    #tt-global .tt-source a { color: var(--accent-blue-light); text-decoration: none; }
+    #tt-global .tt-source a:hover { text-decoration: underline; }
+
+    /* ── Anthropic seat summary ──────────────────────────── */
+    .ant-seat-summary {
+      background: rgba(217,119,6,.08);
+      border: 1px solid rgba(217,119,6,.25);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .ant-seat-summary .stat-val { color: var(--accent-ant-light); }
   </style>
 </head>
 <body>
+<div id="tt-global"></div>
 
 <header>
   <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor" aria-label="GitHub" style="color:#e6edf3">
@@ -498,11 +577,17 @@
         <div class="section-title">Licenses &amp; Seats</div>
         <div class="inline-2">
           <div class="field">
-            <label>Copilot Business Seats <span class="hint">($19/seat · 1,900 credits/seat)</span></label>
+            <label>Copilot Business Seats
+              <i class="tt-icon" onmouseenter="showTT(this,'gh-business')" onmouseleave="scheduleTTHide()">ⓘ</i>
+              <span class="hint">($19/seat · 1,900 credits/seat)</span>
+            </label>
             <input type="number" id="ghBusinessSeats" value="5" min="0" oninput="calculate()" />
           </div>
           <div class="field">
-            <label>Copilot Enterprise Seats <span class="hint">($39/seat · 3,900 credits/seat)</span></label>
+            <label>Copilot Enterprise Seats
+              <i class="tt-icon" onmouseenter="showTT(this,'gh-enterprise')" onmouseleave="scheduleTTHide()">ⓘ</i>
+              <span class="hint">($39/seat · 3,900 credits/seat)</span>
+            </label>
             <input type="number" id="ghEnterpriseSeats" value="0" min="0" oninput="calculate()" />
           </div>
         </div>
@@ -525,7 +610,9 @@
 
         <!-- Included credits value display -->
         <div class="credits-display">
-          <span class="cred-label">💡 Included AI credit pool value</span>
+          <span class="cred-label">💡 Included AI credit pool value
+            <i class="tt-icon" onmouseenter="showTT(this,'gh-credits')" onmouseleave="scheduleTTHide()">ⓘ</i>
+          </span>
           <span class="cred-value" id="ghIncludedCreditsValue">$95.00</span>
           <span style="font-size:12px;color:var(--muted)">= seat cost × 1 (credits fully cover seat fee)</span>
         </div>
@@ -586,44 +673,54 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--accent-ant-light)">
           <path d="M13.827 3.52h3.603L24 20h-3.603l-6.57-16.48zm-7.258 0h3.767L16.906 20h-3.674l-1.343-3.461H5.017L3.674 20H0L6.57 3.52zm4.132 9.959L10.453 7.67 8.228 13.48h4.473z"/>
         </svg>
-        Anthropic Direct API
-        <span class="badge ant-badge">Token-Based</span>
+        Anthropic Claude.ai
+        <span class="badge ant-badge">Seat + API Usage</span>
       </div>
       <div class="card-body">
 
         <div class="info-banner">
-          Anthropic's API is priced purely per token — no seat fee by default. Optionally add a <strong>Claude.ai seat plan</strong> for users who need the web/desktop interface in addition to API access.
+          Claude.ai uses a <strong>seat-based pricing model</strong> like Copilot. Select a plan and user count, then optionally add API token rows if your team also calls the Anthropic API programmatically.
         </div>
 
-        <!-- ── Optional Seat Plan ── -->
-        <div class="section-title">Optional Seat Plan (Claude.ai)</div>
-        <div class="toggle-row" onclick="toggleAntSeat()">
-          <input type="checkbox" id="antSeatEnabled" />
-          <div>
-            <div class="toggle-label">Include Claude.ai Seat Cost</div>
-            <div class="toggle-desc">Add a per-user Claude.ai subscription for the web/desktop app</div>
+        <!-- ── Licenses & Seats ── -->
+        <div class="section-title">Licenses &amp; Seats</div>
+        <div class="inline-2">
+          <div class="field">
+            <label>Number of Users</label>
+            <input type="number" id="antSeatUsers" value="10" min="0" oninput="calculate()" />
           </div>
-        </div>
-        <div id="antSeatInputs" class="hidden" style="margin-top:10px">
-          <div class="inline-2">
-            <div class="field">
-              <label>Number of Claude.ai Users</label>
-              <input type="number" id="antSeatUsers" value="10" min="1" oninput="calculate()" />
-            </div>
-            <div class="field">
-              <label>Claude.ai Plan</label>
-              <select id="antSeatPlan" onchange="calculate()">
-                <option value="20">Pro — $20/user/month</option>
-                <option value="30">Team — $30/user/month</option>
-              </select>
-            </div>
+          <div class="field">
+            <label>Claude.ai Plan
+              <i class="tt-icon" onmouseenter="showAntPlanTT(this)" onmouseleave="scheduleTTHide()">ⓘ</i>
+            </label>
+            <select id="antSeatPlan" onchange="calculate()">
+              <option value="0">Free — $0/user/month</option>
+              <option value="20" selected>Pro — $20/user/month</option>
+              <option value="30">Team — $30/user/month</option>
+            </select>
           </div>
         </div>
 
-        <!-- ── Model Usage ── -->
+        <!-- Seat summary bar -->
+        <div class="ant-seat-summary">
+          <div class="seat-stat">
+            <div class="stat-val" id="antTotalSeats">10</div>
+            <div class="stat-lbl">Total Seats</div>
+          </div>
+          <div class="seat-stat">
+            <div class="stat-val" id="antMonthlySeatCost">$200.00</div>
+            <div class="stat-lbl">Monthly Seat Cost</div>
+          </div>
+          <div class="seat-stat">
+            <div class="stat-val" id="antPlanName">Pro</div>
+            <div class="stat-lbl">Active Plan</div>
+          </div>
+        </div>
+
+        <!-- ── Optional API Token Usage ── -->
         <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Model Usage</span>
-          <span style="font-size:11px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">Tokens per month, total across all API calls</span>
+          <span>Additional API Token Usage <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></span>
+          <span style="font-size:11px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">For teams also using the API directly</span>
         </div>
 
         <div id="antModelRowsContainer"></div>
@@ -668,7 +765,7 @@
       </div>
       <div class="result-card">
         <div class="result-header ant-result-header">
-          <span>Anthropic API</span>
+          <span>Anthropic Claude.ai</span>
           <span id="antModelTag" style="font-size:12px;font-weight:400;color:var(--muted)"></span>
         </div>
         <div class="result-total" id="antTotal">$—</div>
@@ -812,6 +909,7 @@ function buildGhModelRow(id, defaultProvider = 'openai') {
       <select style="flex:1" data-field="model" onchange="calculate()">
         ${modelOptionsHTML(defaultProvider)}
       </select>
+      <i class="tt-icon" onmouseenter="showModelTT(this,'gh',${id})" onmouseleave="scheduleTTHide()" title="View pricing details">ⓘ</i>
       <button class="remove-btn" onclick="removeGhModelRow(${id})" title="Remove row">×</button>
     </div>
     <div class="model-row-inputs">
@@ -870,8 +968,9 @@ function buildAntModelRow(id, defaultModel = 'sonnet-4.5') {
       <select style="flex:1" data-field="model" onchange="calculate()">
         ${antModelOptionsHTML(defaultModel)}
       </select>
-      <button class="remove-btn" onclick="removeAntModelRow(${id})" title="Remove row">×</button>
-    </div>
+    <i class="tt-icon" onmouseenter="showModelTT(this,'ant',${id})" onmouseleave="scheduleTTHide()" title="View pricing details">ⓘ</i>
+    <button class="remove-btn" onclick="removeAntModelRow(${id})" title="Remove row">×</button>
+  </div>
     <div class="model-row-inputs">
       <div class="field">
         <label>Input Tokens (M)</label>
@@ -972,13 +1071,129 @@ function toggleDiscount(vendor) {
   calculate();
 }
 
-function toggleAntSeat() {
-  const cb  = $('antSeatEnabled');
-  const div = $('antSeatInputs');
-  cb.checked = !cb.checked;
-  div.classList.toggle('hidden', !cb.checked);
-  calculate();
+// ── Tooltip System ────────────────────────────────────────────────────────────
+
+const GH_DOCS_URL = 'https://docs.github.com/en/enterprise-cloud@latest/copilot/reference/copilot-billing/models-and-pricing';
+const ANT_PRICING_URL = 'https://claude.com/pricing';
+
+const STATIC_TOOLTIPS = {
+  'gh-business': {
+    title: 'Copilot Business',
+    rows: [['Seat cost','$19 / user / month'],['Included credits','1,900 / seat / month'],['Credits value','$19.00 / seat'],['Overage rate','$0.01 / AI credit'],['Billing entity','Organization or enterprise']],
+    source: { text: 'GitHub Copilot billing docs', url: GH_DOCS_URL }
+  },
+  'gh-enterprise': {
+    title: 'Copilot Enterprise',
+    rows: [['Seat cost','$39 / user / month'],['Included credits','3,900 / seat / month'],['Credits value','$39.00 / seat'],['Overage rate','$0.01 / AI credit'],['Requires','GitHub Enterprise Cloud']],
+    source: { text: 'GitHub Copilot billing docs', url: GH_DOCS_URL }
+  },
+  'gh-credits': {
+    title: 'AI Credit Pool',
+    rows: [['1 AI credit','= $0.01 USD'],['Pool scope','Shared across org / enterprise'],['Overage billing','$0.01 per extra credit'],['Code completions','Unlimited — no credits used']],
+    source: { text: 'Usage-based billing docs', url: GH_DOCS_URL }
+  },
+};
+
+const ANT_PLAN_DETAILS = {
+  '0':  { name: 'Free',       rows: [['Seat cost','$0 / user / month'],['Usage','Limited (throttled at caps)'],['Models','Claude Haiku & Sonnet'],['API access','Not included']] },
+  '20': { name: 'Pro',        rows: [['Seat cost','$20 / user / month'],['Usage','5× more than Free plan'],['Models','All Claude models'],['API access','Via claude.ai (not direct API)']] },
+  '30': { name: 'Team',       rows: [['Seat cost','$30 / user / month'],['Min seats','5 users'],['Usage','Higher than Pro'],['Features','Admin controls, collaboration'],['API access','Via claude.ai']] },
+};
+
+let ttHideTimer = null;
+const TT = document.getElementById('tt-global');
+
+function buildTTHTML(title, rows, source) {
+  const rowsHTML = rows.map(([l, v]) =>
+    `<div class="tt-row"><span class="tt-lbl">${l}</span><span class="tt-val">${v}</span></div>`
+  ).join('');
+  return `<div class="tt-title">${title}</div>${rowsHTML}
+    <div class="tt-source">📖 <a href="${source.url}" target="_blank" rel="noopener">${source.text}</a></div>`;
 }
+
+function positionTT(triggerEl) {
+  const rect = triggerEl.getBoundingClientRect();
+  let left = rect.left + rect.width / 2;
+  let top  = rect.bottom + 8;
+  TT.style.top  = top  + 'px';
+  TT.style.left = left + 'px';
+  TT.style.transform = 'translateX(-50%)';
+  // Prevent overflow off right edge
+  requestAnimationFrame(() => {
+    const tr = TT.getBoundingClientRect();
+    if (tr.right > window.innerWidth - 8) {
+      TT.style.left = (window.innerWidth - tr.width - 8) + 'px';
+      TT.style.transform = 'none';
+    }
+    if (tr.left < 8) {
+      TT.style.left = '8px';
+      TT.style.transform = 'none';
+    }
+  });
+}
+
+function showTT(triggerEl, key) {
+  clearTimeout(ttHideTimer);
+  const data = STATIC_TOOLTIPS[key];
+  if (!data) return;
+  TT.innerHTML = buildTTHTML(data.title, data.rows, data.source);
+  TT.classList.add('tt-visible');
+  positionTT(triggerEl);
+}
+
+function showAntPlanTT(triggerEl) {
+  clearTimeout(ttHideTimer);
+  const planVal = $('antSeatPlan').value;
+  const plan = ANT_PLAN_DETAILS[planVal] || ANT_PLAN_DETAILS['20'];
+  TT.innerHTML = buildTTHTML(
+    'Claude.ai ' + plan.name,
+    plan.rows,
+    { text: 'Anthropic pricing', url: ANT_PRICING_URL }
+  );
+  TT.classList.add('tt-visible');
+  positionTT(triggerEl);
+}
+
+function showModelTT(triggerEl, vendor, rowId) {
+  clearTimeout(ttHideTimer);
+  let model, sourceText, sourceUrl;
+
+  if (vendor === 'gh') {
+    const rowEl = $('ghrow-' + rowId);
+    if (!rowEl) return;
+    const provider = rowEl.querySelector('[data-field="provider"]').value;
+    const modelId  = rowEl.querySelector('[data-field="model"]').value;
+    model = COPILOT_MODELS[provider].find(m => m.id === modelId);
+    sourceText = 'GitHub Copilot billing docs';
+    sourceUrl  = GH_DOCS_URL;
+  } else {
+    const rowEl = $('antrow-' + rowId);
+    if (!rowEl) return;
+    const modelKey = rowEl.querySelector('[data-field="model"]').value;
+    model = ANTHROPIC_MODELS[modelKey];
+    sourceText = 'Anthropic pricing';
+    sourceUrl  = ANT_PRICING_URL;
+  }
+  if (!model) return;
+
+  const rows = [
+    ['Input', `$${model.input.toFixed(2)} / 1M tokens`],
+    ['Cached input', `$${model.cachedInput.toFixed(2)} / 1M tokens`],
+  ];
+  if (model.cacheWrite) rows.push(['Cache write', `$${model.cacheWrite.toFixed(2)} / 1M tokens`]);
+  rows.push(['Output', `$${model.output.toFixed(2)} / 1M tokens`]);
+
+  TT.innerHTML = buildTTHTML(model.label, rows, { text: sourceText, url: sourceUrl });
+  TT.classList.add('tt-visible');
+  positionTT(triggerEl);
+}
+
+function scheduleTTHide() {
+  ttHideTimer = setTimeout(() => TT.classList.remove('tt-visible'), 250);
+}
+
+TT.addEventListener('mouseenter', () => clearTimeout(ttHideTimer));
+TT.addEventListener('mouseleave', scheduleTTHide);
 
 function toggleGhDirectCredits() {
   const cb  = $('ghDirectCreditsEnabled');
@@ -1144,13 +1359,16 @@ function calculate() {
   const antSeatDiscPct  = $('antDiscountEnabled').checked ? (parseFloat($('antSeatDiscount').value)  || 0) : 0;
   const antTokenDiscPct = $('antDiscountEnabled').checked ? (parseFloat($('antTokenDiscount').value) || 0) : 0;
 
-  let antSeatCostRaw = 0, antSeatCost = 0, antSeatUsers = 0;
-  if ($('antSeatEnabled').checked) {
-    antSeatUsers    = Math.max(1, parseInt($('antSeatUsers').value) || 1);
-    const planPrice = parseFloat($('antSeatPlan').value) || 20;
-    antSeatCostRaw  = planPrice * antSeatUsers;
-    antSeatCost     = applyDiscount(antSeatCostRaw, antSeatDiscPct);
-  }
+  const antSeatUsers   = Math.max(0, parseInt($('antSeatUsers').value) || 0);
+  const antPlanPrice   = parseFloat($('antSeatPlan').value) || 0;
+  const antSeatCostRaw = antPlanPrice * antSeatUsers;
+  const antSeatCost    = applyDiscount(antSeatCostRaw, antSeatDiscPct);
+
+  // Update Anthropic seat summary
+  const antPlanNames = { '0': 'Free', '20': 'Pro', '30': 'Team' };
+  $('antTotalSeats').textContent    = antSeatUsers.toLocaleString();
+  $('antMonthlySeatCost').textContent = fmt(antSeatCostRaw);
+  $('antPlanName').textContent      = antPlanNames[String(antPlanPrice)] || 'Pro';
 
   const antModelRows = readAntModelRows();
   let antTokenTotal = 0;
@@ -1181,16 +1399,13 @@ function calculate() {
   $('antModelTag').textContent = antModelSummaries.map(s => s.label).join(', ').substring(0, 60);
 
   let antHTML = '';
-  if ($('antSeatEnabled').checked) {
-    const planPrice = parseFloat($('antSeatPlan').value) || 20;
-    antHTML += brow(`Seat cost (${antSeatUsers} × ${fmt(planPrice)})`, fmt(antSeatCostRaw));
-    if (antSeatDiscPct > 0)
-      antHTML += brow(`Seat discount (${antSeatDiscPct}%)`, '−' + fmt(antSeatCostRaw - antSeatCost), 'discount-row');
-    antHTML += brow('Net seat cost', fmt(antSeatCost));
+  const antPlanLabel = antPlanNames[String(antPlanPrice)] || 'Pro';
+  antHTML += brow(`Seat cost — ${antPlanLabel} (${antSeatUsers} × ${fmt(antPlanPrice)})`, fmt(antSeatCostRaw));
+  if (antSeatDiscPct > 0)
+    antHTML += brow(`Seat discount (${antSeatDiscPct}%)`, '−' + fmt(antSeatCostRaw - antSeatCost), 'discount-row');
+  antHTML += brow('Net seat cost', fmt(antSeatCost));
+  if (antModelSummaries.length)
     antHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
-  } else {
-    antHTML += brow('Seat cost', '$0.00 (API only)');
-  }
 
   if (antModelSummaries.length) {
     antHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">API Token Usage</div>`;
@@ -1231,7 +1446,7 @@ function calculate() {
     <tr>
       <td>Seats (raw cost)</td>
       <td>${fmt(rawSeatCost)} (${totalSeats} seats)</td>
-      <td>${$('antSeatEnabled').checked ? fmt(antSeatCostRaw) + ' (' + antSeatUsers + ' users)' : '—'}</td>
+      <td>${fmt(antSeatCostRaw)} (${antSeatUsers} × ${antPlanLabel})</td>
     </tr>
     <tr>
       <td>Included AI credits (value)</td>
