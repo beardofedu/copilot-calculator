@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Copilot vs Anthropic — Cost Comparison Calculator</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent-gh: #238636;
+      --accent-gh-light: #3fb950;
+      --accent-ant: #d97706;
+      --accent-ant-light: #f59e0b;
+      --accent-blue: #1f6feb;
+      --accent-blue-light: #388bfd;
+      --danger: #da3633;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 20px; font-weight: 600; }
+    header p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+    /* ── Layout ──────────────────────────────────────────── */
+    .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── Card ────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .card-header .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .gh-header { border-top: 3px solid var(--accent-gh); }
+    .gh-badge { background: rgba(35,134,54,.25); color: var(--accent-gh-light); }
+    .ant-header { border-top: 3px solid var(--accent-ant); }
+    .ant-badge { background: rgba(217,119,6,.25); color: var(--accent-ant-light); }
+
+    .card-body { padding: 18px; }
+
+    /* ── Form controls ───────────────────────────────────── */
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+    }
+    label .hint {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--muted);
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type="number"]:focus, select:focus {
+      border-color: var(--accent-blue-light);
+    }
+    select option { background: var(--surface2); }
+
+    .inline-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .inline-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* ── Toggle / Checkbox ───────────────────────────────── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    .toggle-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent-blue-light);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .toggle-row .toggle-label {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .toggle-row .toggle-desc { font-size: 12px; color: var(--muted); }
+
+    .discount-inputs {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .discount-inputs.hidden { display: none; }
+    .pct-field { position: relative; }
+    .pct-field input { padding-right: 28px; }
+    .pct-field::after {
+      content: "%";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* ── Section divider ─────────────────────────────────── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin: 20px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Info banner ─────────────────────────────────────── */
+    .info-banner {
+      background: rgba(31,111,235,.1);
+      border: 1px solid rgba(31,111,235,.3);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #79c0ff;
+      margin-bottom: 16px;
+    }
+    .info-banner strong { color: #a5d6ff; }
+
+    /* ── Results ─────────────────────────────────────────── */
+    .results-section { margin-top: 24px; }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .results-grid { grid-template-columns: 1fr; } }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .result-header {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .gh-result-header { background: rgba(35,134,54,.12); border-bottom: 1px solid rgba(35,134,54,.3); color: var(--accent-gh-light); }
+    .ant-result-header { background: rgba(217,119,6,.12); border-bottom: 1px solid rgba(217,119,6,.3); color: var(--accent-ant-light); }
+
+    .result-total {
+      font-size: 28px;
+      font-weight: 700;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .result-breakdown { padding: 12px 16px; }
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(48,54,61,.5);
+    }
+    .breakdown-row:last-child { border-bottom: none; }
+    .breakdown-row .label { color: var(--muted); }
+    .breakdown-row .value { font-weight: 500; font-family: "SFMono-Regular", Consolas, monospace; }
+    .breakdown-row.discount-row .value { color: #3fb950; }
+    .breakdown-row.overage-row .value { color: var(--danger); }
+    .breakdown-row.total-row {
+      margin-top: 6px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* ── Summary comparison ──────────────────────────────── */
+    .summary-card {
+      margin-top: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .summary-header {
+      background: var(--surface2);
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .winner-banner {
+      padding: 16px 18px;
+      font-size: 18px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .winner-gh { color: var(--accent-gh-light); }
+    .winner-ant { color: var(--accent-ant-light); }
+    .winner-tie { color: #79c0ff; }
+    .savings-pill {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+    .savings-gh { background: rgba(35,134,54,.2); color: var(--accent-gh-light); }
+    .savings-ant { background: rgba(217,119,6,.2); color: var(--accent-ant-light); }
+
+    .comparison-table { width: 100%; border-collapse: collapse; }
+    .comparison-table td, .comparison-table th {
+      padding: 9px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .comparison-table th {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      background: var(--surface2);
+    }
+    .comparison-table td:not(:first-child) {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+    }
+    .comparison-table tr:last-child td { border-bottom: none; }
+    .lower { color: #3fb950; font-weight: 600; }
+    .higher { color: var(--danger); }
+
+    /* ── Shared usage section ────────────────────────────── */
+    .usage-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+    }
+    .usage-header {
+      background: var(--surface2);
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .usage-body { padding: 18px; }
+
+    /* ── Util ────────────────────────────────────────────── */
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-left: 6px;
+    }
+    .text-muted { color: var(--muted); }
+    .mt-4 { margin-top: 4px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    .footnote { font-size: 12px; color: var(--muted); margin-top: 16px; }
+    .footnote a { color: var(--accent-blue-light); }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor" aria-label="GitHub" style="color:#e6edf3">
+    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+      0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+      -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+      .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+      -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0
+      1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82
+      1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
+      1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+  </svg>
+  <div>
+    <h1>GitHub Copilot vs Anthropic — Cost Comparison</h1>
+    <p>Compare token-based model pricing and seat costs between GitHub Copilot and Anthropic's direct API.</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── Shared Usage Inputs ───────────────────────────────── -->
+  <div class="usage-card">
+    <div class="usage-header">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color:var(--accent-blue-light)">
+        <path d="M1.5 1.75V13.5h13.75a.75.75 0 010 1.5H.75a.75.75 0 01-.75-.75V1.75a.75.75 0 011.5 0z"/>
+        <path d="M5.18 11.497a.75.75 0 01-1.06-1.06l3.25-3.25a.75.75 0 011.06 0l1.72 1.72 3.97-4.72a.75.75 0 011.14.97l-4.5 5.352a.75.75 0 01-1.13.015L7.92 8.817l-2.74 2.68z"/>
+      </svg>
+      Monthly Usage &amp; Team Size
+    </div>
+    <div class="usage-body">
+      <div class="inline-3">
+        <div class="field">
+          <label>Number of Users / Seats</label>
+          <input type="number" id="numUsers" value="10" min="1" />
+        </div>
+        <div class="field">
+          <label>Input Tokens / User / Month <span class="hint">(millions)</span></label>
+          <input type="number" id="inputTokensM" value="5" min="0" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Output Tokens / User / Month <span class="hint">(millions)</span></label>
+          <input type="number" id="outputTokensM" value="2" min="0" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Cached Input Tokens / User / Month <span class="hint">(millions)</span></label>
+          <input type="number" id="cachedTokensM" value="1" min="0" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Cache Write Tokens / User / Month <span class="hint">(millions, Anthropic models)</span></label>
+          <input type="number" id="cacheWriteTokensM" value="0.5" min="0" step="0.1" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Vendor Cards ──────────────────────────────────────── -->
+  <div class="grid-2">
+
+    <!-- GitHub Copilot -->
+    <div class="card">
+      <div class="card-header gh-header">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" style="color:var(--accent-gh-light)">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        GitHub Copilot
+        <span class="badge gh-badge">Seat + Token Overage</span>
+      </div>
+      <div class="card-body">
+
+        <div class="info-banner">
+          <strong>1 AI credit = $0.01 USD</strong>. Seats include a monthly AI credit pool. Token usage over the included pool is billed at $0.01/credit. Code completions are <strong>unlimited</strong> and don't consume credits.
+        </div>
+
+        <div class="section-title">Plan &amp; Seat</div>
+        <div class="field">
+          <label>Copilot Plan</label>
+          <select id="copilotPlan" onchange="onCopilotPlanChange()">
+            <option value="business">Business — $19/seat/mo · 1,900 AI credits/seat</option>
+            <option value="enterprise">Enterprise — $39/seat/mo · 3,900 AI credits/seat</option>
+          </select>
+        </div>
+
+        <div class="section-title">Model Selection</div>
+        <div class="field">
+          <label>Provider</label>
+          <select id="copilotProvider" onchange="onCopilotProviderChange()">
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="google">Google</option>
+            <option value="github">Fine-tuned (GitHub)</option>
+            <option value="microsoft">Microsoft</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Model</label>
+          <select id="copilotModel" onchange="calculate()"></select>
+        </div>
+
+        <div class="section-title">Vendor Discount</div>
+        <div class="toggle-row" onclick="toggleDiscount('gh')">
+          <input type="checkbox" id="ghDiscountEnabled" onchange="calculate()" />
+          <div>
+            <div class="toggle-label">Apply GitHub Copilot Discount</div>
+            <div class="toggle-desc">Reduces both seat cost and token/AI credit rates</div>
+          </div>
+        </div>
+        <div class="discount-inputs hidden" id="ghDiscountInputs">
+          <div class="field pct-field">
+            <label>Seat Cost Discount</label>
+            <input type="number" id="ghSeatDiscount" value="10" min="0" max="100" onchange="calculate()" />
+          </div>
+          <div class="field pct-field">
+            <label>Token / Credit Rate Discount</label>
+            <input type="number" id="ghTokenDiscount" value="10" min="0" max="100" onchange="calculate()" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Anthropic -->
+    <div class="card">
+      <div class="card-header ant-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--accent-ant-light)">
+          <path d="M13.827 3.52h3.603L24 20h-3.603l-6.57-16.48zm-7.258 0h3.767L16.906 20h-3.674l-1.343-3.461H5.017L3.674 20H0L6.57 3.52zm4.132 9.959L10.453 7.67 8.228 13.48h4.473z"/>
+        </svg>
+        Anthropic Direct API
+        <span class="badge ant-badge">Token-Based</span>
+      </div>
+      <div class="card-body">
+
+        <div class="info-banner">
+          Anthropic's API is priced purely per token — no seat fee by default. Optionally add a <strong>Claude.ai seat plan</strong> for users who need the web/desktop interface in addition to the API.
+        </div>
+
+        <div class="section-title">Model Selection</div>
+        <div class="field">
+          <label>Model</label>
+          <select id="anthropicModel" onchange="calculate()">
+            <option value="haiku-4.5">Claude Haiku 4.5 — $1.00/$5.00 (in/out per 1M)</option>
+            <option value="sonnet-4">Claude Sonnet 4 — $3.00/$15.00</option>
+            <option value="sonnet-4.5" selected>Claude Sonnet 4.5 — $3.00/$15.00</option>
+            <option value="sonnet-4.6">Claude Sonnet 4.6 — $3.00/$15.00</option>
+            <option value="opus-4.5">Claude Opus 4.5 — $5.00/$25.00</option>
+            <option value="opus-4.6">Claude Opus 4.6 — $5.00/$25.00</option>
+            <option value="opus-4.7">Claude Opus 4.7 — $5.00/$25.00</option>
+            <option value="opus-4.8">Claude Opus 4.8 — $5.00/$25.00</option>
+            <option value="fable-5">Claude Fable 5 — $10.00/$50.00</option>
+          </select>
+        </div>
+
+        <div class="section-title">Optional Seat Plan (Claude.ai)</div>
+        <div class="toggle-row" onclick="toggleAntSeat()">
+          <input type="checkbox" id="antSeatEnabled" onchange="calculate()" />
+          <div>
+            <div class="toggle-label">Include Claude.ai Seat Cost</div>
+            <div class="toggle-desc">Add a per-user Claude.ai subscription for the web/desktop app</div>
+          </div>
+        </div>
+        <div class="discount-inputs hidden" id="antSeatInputs">
+          <div class="field">
+            <label>Claude.ai Plan</label>
+            <select id="antSeatPlan" onchange="calculate()">
+              <option value="20">Pro — $20/user/month</option>
+              <option value="30">Team — $30/user/month</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-title">Vendor Discount</div>
+        <div class="toggle-row" onclick="toggleDiscount('ant')">
+          <input type="checkbox" id="antDiscountEnabled" onchange="calculate()" />
+          <div>
+            <div class="toggle-label">Apply Anthropic Discount</div>
+            <div class="toggle-desc">Reduces both seat cost and token rates</div>
+          </div>
+        </div>
+        <div class="discount-inputs hidden" id="antDiscountInputs">
+          <div class="field pct-field">
+            <label>Seat Cost Discount</label>
+            <input type="number" id="antSeatDiscount" value="10" min="0" max="100" onchange="calculate()" />
+          </div>
+          <div class="field pct-field">
+            <label>Token Rate Discount</label>
+            <input type="number" id="antTokenDiscount" value="10" min="0" max="100" onchange="calculate()" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Results ───────────────────────────────────────────── -->
+  <div class="results-section">
+    <div class="section-title" style="margin-top:0">Monthly Cost Breakdown</div>
+
+    <div class="results-grid">
+      <!-- GH Result -->
+      <div class="result-card">
+        <div class="result-header gh-result-header">
+          <span>GitHub Copilot</span>
+          <span id="ghModelTag" style="font-size:12px;font-weight:400;color:var(--muted)"></span>
+        </div>
+        <div class="result-total" id="ghTotal">$—</div>
+        <div class="result-breakdown" id="ghBreakdown"></div>
+      </div>
+
+      <!-- Anthropic Result -->
+      <div class="result-card">
+        <div class="result-header ant-result-header">
+          <span>Anthropic API</span>
+          <span id="antModelTag" style="font-size:12px;font-weight:400;color:var(--muted)"></span>
+        </div>
+        <div class="result-total" id="antTotal">$—</div>
+        <div class="result-breakdown" id="antBreakdown"></div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-card">
+      <div class="summary-header">📊 Side-by-Side Summary</div>
+      <div class="winner-banner" id="winnerBanner">—</div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Cost Component</th>
+            <th>GitHub Copilot</th>
+            <th>Anthropic API</th>
+          </tr>
+        </thead>
+        <tbody id="comparisonRows"></tbody>
+      </table>
+    </div>
+
+    <p class="footnote">
+      Prices per 1M tokens sourced from
+      <a href="https://docs.github.com/en/enterprise-cloud@latest/copilot/reference/copilot-billing/models-and-pricing" target="_blank">GitHub Copilot billing docs</a>
+      and <a href="https://claude.com/pricing" target="_blank">Anthropic pricing</a>.
+      Rates may change — verify before making purchasing decisions.
+      Code completions and next-edit suggestions in Copilot are unlimited and not included in these calculations.
+    </p>
+  </div>
+
+</div>
+
+<script>
+// ── Pricing Data ─────────────────────────────────────────────────────────────
+
+const COPILOT_PLANS = {
+  business:   { label: 'Business',   seatCost: 19, creditsPerSeat: 1900 },
+  enterprise: { label: 'Enterprise', seatCost: 39, creditsPerSeat: 3900 },
+};
+
+// All prices in $ per 1M tokens
+const COPILOT_MODELS = {
+  openai: [
+    { id: 'gpt5mini',       label: 'GPT-5 mini',             input: 0.25,  cachedInput: 0.025, output: 2.00  },
+    { id: 'gpt53codex',     label: 'GPT-5.3-Codex',          input: 1.75,  cachedInput: 0.175, output: 14.00 },
+    { id: 'gpt54',          label: 'GPT-5.4 (≤272K)',         input: 2.50,  cachedInput: 0.25,  output: 15.00 },
+    { id: 'gpt54lc',        label: 'GPT-5.4 (>272K)',         input: 5.00,  cachedInput: 0.50,  output: 22.50 },
+    { id: 'gpt54mini',      label: 'GPT-5.4 mini',           input: 0.75,  cachedInput: 0.075, output: 4.50  },
+    { id: 'gpt54nano',      label: 'GPT-5.4 nano',           input: 0.20,  cachedInput: 0.02,  output: 1.25  },
+    { id: 'gpt55',          label: 'GPT-5.5 (≤272K)',         input: 5.00,  cachedInput: 0.50,  output: 30.00 },
+    { id: 'gpt55lc',        label: 'GPT-5.5 (>272K)',         input: 10.00, cachedInput: 1.00,  output: 45.00 },
+  ],
+  anthropic: [
+    { id: 'haiku45',    label: 'Claude Haiku 4.5',   input: 1.00, cachedInput: 0.10, cacheWrite: 1.25, output: 5.00  },
+    { id: 'sonnet4',    label: 'Claude Sonnet 4',    input: 3.00, cachedInput: 0.30, cacheWrite: 3.75, output: 15.00 },
+    { id: 'sonnet45',   label: 'Claude Sonnet 4.5',  input: 3.00, cachedInput: 0.30, cacheWrite: 3.75, output: 15.00 },
+    { id: 'sonnet46',   label: 'Claude Sonnet 4.6',  input: 3.00, cachedInput: 0.30, cacheWrite: 3.75, output: 15.00 },
+    { id: 'opus45',     label: 'Claude Opus 4.5',    input: 5.00, cachedInput: 0.50, cacheWrite: 6.25, output: 25.00 },
+    { id: 'opus46',     label: 'Claude Opus 4.6',    input: 5.00, cachedInput: 0.50, cacheWrite: 6.25, output: 25.00 },
+    { id: 'opus47',     label: 'Claude Opus 4.7',    input: 5.00, cachedInput: 0.50, cacheWrite: 6.25, output: 25.00 },
+    { id: 'opus48',     label: 'Claude Opus 4.8',    input: 5.00, cachedInput: 0.50, cacheWrite: 6.25, output: 25.00 },
+    { id: 'fable5',     label: 'Claude Fable 5',     input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+  ],
+  google: [
+    { id: 'gemini25pro',  label: 'Gemini 2.5 Pro',          input: 1.25, cachedInput: 0.125, output: 10.00 },
+    { id: 'gemini3flash', label: 'Gemini 3 Flash ⚠ Preview', input: 0.50, cachedInput: 0.05,  output: 3.00  },
+    { id: 'gemini31pro',  label: 'Gemini 3.1 Pro (≤200K) ⚠', input: 2.00, cachedInput: 0.20,  output: 12.00 },
+    { id: 'gemini31prolc',label: 'Gemini 3.1 Pro (>200K) ⚠', input: 4.00, cachedInput: 0.40,  output: 18.00 },
+    { id: 'gemini35flash',label: 'Gemini 3.5 Flash',         input: 1.50, cachedInput: 0.15,  output: 9.00  },
+  ],
+  github: [
+    { id: 'raptormini', label: 'Raptor mini ⚠ Preview', input: 0.25, cachedInput: 0.025, output: 2.00 },
+  ],
+  microsoft: [
+    { id: 'maicodeflash', label: 'MAI-Code-1-Flash', input: 0.75, cachedInput: 0.075, output: 4.50 },
+  ],
+};
+
+const ANTHROPIC_MODELS = {
+  'haiku-4.5': { label: 'Claude Haiku 4.5',  input: 1.00,  cachedInput: 0.10, cacheWrite: 1.25,  output: 5.00  },
+  'sonnet-4':  { label: 'Claude Sonnet 4',   input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
+  'sonnet-4.5':{ label: 'Claude Sonnet 4.5', input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
+  'sonnet-4.6':{ label: 'Claude Sonnet 4.6', input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
+  'opus-4.5':  { label: 'Claude Opus 4.5',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+  'opus-4.6':  { label: 'Claude Opus 4.6',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+  'opus-4.7':  { label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+  'opus-4.8':  { label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+  'fable-5':   { label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const applyDiscount = (value, pct) => value * (1 - Math.min(pct, 100) / 100);
+
+function row(label, value, cls = '') {
+  return `<div class="breakdown-row ${cls}">
+    <span class="label">${label}</span>
+    <span class="value">${value}</span>
+  </div>`;
+}
+
+// ── UI Wiring ─────────────────────────────────────────────────────────────────
+
+function toggleDiscount(vendor) {
+  const cb  = $(vendor === 'gh' ? 'ghDiscountEnabled' : 'antDiscountEnabled');
+  const div = $(vendor === 'gh' ? 'ghDiscountInputs'  : 'antDiscountInputs');
+  cb.checked = !cb.checked;
+  div.classList.toggle('hidden', !cb.checked);
+  calculate();
+}
+
+function toggleAntSeat() {
+  const cb  = $('antSeatEnabled');
+  const div = $('antSeatInputs');
+  cb.checked = !cb.checked;
+  div.classList.toggle('hidden', !cb.checked);
+  calculate();
+}
+
+function onCopilotProviderChange() {
+  const provider = $('copilotProvider').value;
+  const modelSel = $('copilotModel');
+  modelSel.innerHTML = '';
+  COPILOT_MODELS[provider].forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.label;
+    modelSel.appendChild(opt);
+  });
+  calculate();
+}
+
+function onCopilotPlanChange() { calculate(); }
+
+// ── Core Calculation ──────────────────────────────────────────────────────────
+
+function calculate() {
+  const users        = Math.max(1, parseInt($('numUsers').value) || 1);
+  const inputM       = parseFloat($('inputTokensM').value)      || 0;
+  const outputM      = parseFloat($('outputTokensM').value)     || 0;
+  const cachedM      = parseFloat($('cachedTokensM').value)     || 0;
+  const cacheWriteM  = parseFloat($('cacheWriteTokensM').value) || 0;
+
+  // ── GitHub Copilot ──────────────────────────────────────────
+  const planKey  = $('copilotPlan').value;
+  const plan     = COPILOT_PLANS[planKey];
+
+  const ghSeatDiscPct  = $('ghDiscountEnabled').checked ? (parseFloat($('ghSeatDiscount').value)  || 0) : 0;
+  const ghTokenDiscPct = $('ghDiscountEnabled').checked ? (parseFloat($('ghTokenDiscount').value) || 0) : 0;
+
+  const ghSeatCostRaw  = plan.seatCost * users;
+  const ghSeatCost     = applyDiscount(ghSeatCostRaw, ghSeatDiscPct);
+
+  // Included AI credits pool
+  const includedCredits = plan.creditsPerSeat * users;
+
+  // Get selected model for Copilot
+  const providerKey  = $('copilotProvider').value;
+  const modelId      = $('copilotModel').value;
+  const ghModel      = COPILOT_MODELS[providerKey].find(m => m.id === modelId) || COPILOT_MODELS[providerKey][0];
+
+  // Token cost per user in dollars (per-million pricing)
+  const ghInputCost      = (inputM      * ghModel.input)      * users;
+  const ghOutputCost     = (outputM     * ghModel.output)     * users;
+  const ghCachedCost     = (cachedM     * ghModel.cachedInput) * users;
+  const ghCacheWriteCost = ghModel.cacheWrite ? (cacheWriteM * ghModel.cacheWrite * users) : 0;
+
+  // Apply token discount to rates
+  const ghInputCostD      = applyDiscount(ghInputCost,      ghTokenDiscPct);
+  const ghOutputCostD     = applyDiscount(ghOutputCost,     ghTokenDiscPct);
+  const ghCachedCostD     = applyDiscount(ghCachedCost,     ghTokenDiscPct);
+  const ghCacheWriteCostD = applyDiscount(ghCacheWriteCost, ghTokenDiscPct);
+
+  const ghRawTokenCost = ghInputCostD + ghOutputCostD + ghCachedCostD + ghCacheWriteCostD;
+
+  // Convert token $ cost to AI credits (1 credit = $0.01)
+  const creditsUsed = ghRawTokenCost / 0.01;
+
+  // Overage credits
+  const overageCredits = Math.max(0, creditsUsed - includedCredits);
+  const overageCost    = applyDiscount(overageCredits * 0.01, ghTokenDiscPct);
+
+  const ghTotal = ghSeatCost + overageCost;
+
+  // Build breakdown
+  $('ghModelTag').textContent = ghModel.label;
+  $('ghTotal').textContent = fmt(ghTotal);
+
+  let ghBreakdownHTML = '';
+  ghBreakdownHTML += row('Seat cost (' + users + ' × ' + fmt(plan.seatCost) + ')', fmt(ghSeatCostRaw));
+  if (ghSeatDiscPct > 0)
+    ghBreakdownHTML += row(`Seat discount (${ghSeatDiscPct}%)`, '-' + fmt(ghSeatCostRaw - ghSeatCost), 'discount-row');
+  ghBreakdownHTML += row('Net seat cost', fmt(ghSeatCost));
+  ghBreakdownHTML += row(`Included AI credits (${includedCredits.toLocaleString()})`, fmt(includedCredits * 0.01));
+  ghBreakdownHTML += row(`Credits consumed by token usage`, creditsUsed.toLocaleString('en-US', {maximumFractionDigits: 0}));
+  if (overageCredits > 0) {
+    ghBreakdownHTML += row(`Overage credits (${overageCredits.toLocaleString('en-US', {maximumFractionDigits: 0})})`, fmt(overageCost), 'overage-row');
+  } else {
+    ghBreakdownHTML += row('Token usage within included credits', '✓ No overage');
+  }
+  if (ghTokenDiscPct > 0)
+    ghBreakdownHTML += row(`Token rate discount applied (${ghTokenDiscPct}%)`, '✓', 'discount-row');
+  ghBreakdownHTML += row('Monthly Total', fmt(ghTotal), 'total-row');
+  $('ghBreakdown').innerHTML = ghBreakdownHTML;
+
+  // ── Anthropic ───────────────────────────────────────────────
+  const antModelKey  = $('anthropicModel').value;
+  const antModel     = ANTHROPIC_MODELS[antModelKey];
+
+  const antSeatDiscPct  = $('antDiscountEnabled').checked ? (parseFloat($('antSeatDiscount').value)  || 0) : 0;
+  const antTokenDiscPct = $('antDiscountEnabled').checked ? (parseFloat($('antTokenDiscount').value) || 0) : 0;
+
+  // Seat cost (optional)
+  let antSeatCostRaw = 0;
+  let antSeatCost    = 0;
+  if ($('antSeatEnabled').checked) {
+    const planPrice  = parseFloat($('antSeatPlan').value) || 20;
+    antSeatCostRaw   = planPrice * users;
+    antSeatCost      = applyDiscount(antSeatCostRaw, antSeatDiscPct);
+  }
+
+  // Token costs
+  const antInputCostRaw      = inputM     * antModel.input      * users;
+  const antOutputCostRaw     = outputM    * antModel.output     * users;
+  const antCachedCostRaw     = cachedM    * antModel.cachedInput * users;
+  const antCacheWriteCostRaw = cacheWriteM * antModel.cacheWrite * users;
+
+  const antInputCost      = applyDiscount(antInputCostRaw,      antTokenDiscPct);
+  const antOutputCost     = applyDiscount(antOutputCostRaw,     antTokenDiscPct);
+  const antCachedCost     = applyDiscount(antCachedCostRaw,     antTokenDiscPct);
+  const antCacheWriteCost = applyDiscount(antCacheWriteCostRaw, antTokenDiscPct);
+
+  const antTokenTotal = antInputCost + antOutputCost + antCachedCost + antCacheWriteCost;
+  const antTotal      = antSeatCost + antTokenTotal;
+
+  $('antModelTag').textContent = antModel.label;
+  $('antTotal').textContent = fmt(antTotal);
+
+  let antBreakdownHTML = '';
+  if ($('antSeatEnabled').checked) {
+    const planPrice = parseFloat($('antSeatPlan').value) || 20;
+    antBreakdownHTML += row('Seat cost (' + users + ' × ' + fmt(planPrice) + ')', fmt(antSeatCostRaw));
+    if (antSeatDiscPct > 0)
+      antBreakdownHTML += row(`Seat discount (${antSeatDiscPct}%)`, '-' + fmt(antSeatCostRaw - antSeatCost), 'discount-row');
+    antBreakdownHTML += row('Net seat cost', fmt(antSeatCost));
+  } else {
+    antBreakdownHTML += row('Seat cost', '$0.00 (API only)');
+  }
+
+  antBreakdownHTML += row('Input tokens (' + (inputM * users).toLocaleString() + 'M total)', fmt(antInputCost));
+  antBreakdownHTML += row('Output tokens (' + (outputM * users).toLocaleString() + 'M total)', fmt(antOutputCost));
+  if (cachedM > 0)
+    antBreakdownHTML += row('Cached input tokens', fmt(antCachedCost));
+  if (cacheWriteM > 0)
+    antBreakdownHTML += row('Cache write tokens', fmt(antCacheWriteCost));
+  if (antTokenDiscPct > 0)
+    antBreakdownHTML += row(`Token rate discount (${antTokenDiscPct}%)`, '✓', 'discount-row');
+  antBreakdownHTML += row('Token subtotal', fmt(antTokenTotal));
+  antBreakdownHTML += row('Monthly Total', fmt(antTotal), 'total-row');
+  $('antBreakdown').innerHTML = antBreakdownHTML;
+
+  // ── Summary ─────────────────────────────────────────────────
+  updateSummary(ghTotal, antTotal, ghSeatCost, antSeatCost, antTokenTotal, ghRawTokenCost + overageCost, users, plan, includedCredits, creditsUsed);
+}
+
+function updateSummary(ghTotal, antTotal, ghSeatCost, antSeatCost, antTokenTotal, ghTokenCost, users, plan, includedCredits, creditsUsed) {
+  // Winner
+  const diff    = Math.abs(ghTotal - antTotal);
+  const pct     = ghTotal > 0 ? (diff / Math.max(ghTotal, antTotal) * 100).toFixed(1) : '0';
+  const winBanner = $('winnerBanner');
+
+  if (Math.abs(ghTotal - antTotal) < 0.005) {
+    winBanner.innerHTML = `<span class="winner-tie">🤝 Roughly equal cost — ${fmt(ghTotal)}/month each</span>`;
+  } else if (ghTotal < antTotal) {
+    winBanner.innerHTML = `
+      <span class="winner-gh">✅ GitHub Copilot is cheaper by ${fmt(diff)} (${pct}%)</span>
+      <span class="savings-pill savings-gh">Save ${fmt(diff)}/mo</span>`;
+  } else {
+    winBanner.innerHTML = `
+      <span class="winner-ant">✅ Anthropic API is cheaper by ${fmt(diff)} (${pct}%)</span>
+      <span class="savings-pill savings-ant">Save ${fmt(diff)}/mo</span>`;
+  }
+
+  // Table rows
+  const ghClass  = ghTotal  <= antTotal ? 'lower' : 'higher';
+  const antClass = antTotal <= ghTotal  ? 'lower' : 'higher';
+
+  const overageAmt  = Math.max(0, creditsUsed - includedCredits) * 0.01;
+  const annualGh    = ghTotal * 12;
+  const annualAnt   = antTotal * 12;
+
+  $('comparisonRows').innerHTML = `
+    <tr>
+      <td>Seat cost / month</td>
+      <td>${fmt(ghSeatCost)}</td>
+      <td>${fmt(antSeatCost)}</td>
+    </tr>
+    <tr>
+      <td>Token / API cost / month</td>
+      <td>${fmt(ghTokenCost)}</td>
+      <td>${fmt(antTokenTotal)}</td>
+    </tr>
+    <tr>
+      <td>Included AI credits value (Copilot)</td>
+      <td>${fmt(includedCredits * 0.01)}</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Token overage cost</td>
+      <td class="${overageAmt > 0 ? 'overage-row' : ''}">${overageAmt > 0 ? fmt(overageAmt) : '—'}</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><strong>Total / month</strong></td>
+      <td class="${ghClass}"><strong>${fmt(ghTotal)}</strong></td>
+      <td class="${antClass}"><strong>${fmt(antTotal)}</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Total / year</strong></td>
+      <td class="${ghClass}"><strong>${fmt(annualGh)}</strong></td>
+      <td class="${antClass}"><strong>${fmt(annualAnt)}</strong></td>
+    </tr>
+  `;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+onCopilotProviderChange();
+
+// Wire up all inputs to recalculate on change
+document.querySelectorAll('input[type="number"], select').forEach(el => {
+  el.addEventListener('input', calculate);
+});
+</script>
+</body>
+</html>
