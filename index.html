@@ -787,7 +787,7 @@
         </div>
 
         <!-- ── Included Credits ── -->
-        <div class="section-title" style="margin-top:4px">Included Credits</div>
+        <div class="section-title" style="margin-top:4px">Included Credits <i class="tt-icon" onmouseenter="showAntCreditsTT(this)" onmouseleave="scheduleTTHide()">ⓘ</i></div>
         <div class="info-banner" style="margin-bottom:10px">
           Anthropic includes API credits with paid plans but doesn't publicly disclose the amount. Enter the credits included with your subscription.
         </div>
@@ -1290,6 +1290,21 @@ function showTT(triggerEl, key) {
   TT.classList.add('tt-visible');
   positionTT(triggerEl);
 }
+
+function showAntCreditsTT(triggerEl) {
+  clearTimeout(ttHideTimer);
+  TT.innerHTML = `
+    <div class="tt-title">Estimated Plan Credit Allocations</div>
+    <div class="tt-row"><span class="tt-lbl">Team Standard</span><span class="tt-val">~55,000 tokens / session</span></div>
+    <div class="tt-row"><span class="tt-lbl">Team Premium</span><span class="tt-val">~275,000 tokens / session</span></div>
+    <div class="tt-row"><span class="tt-lbl">Max 5x</span><span class="tt-val">~220,000 tokens / session</span></div>
+    <div class="tt-row"><span class="tt-lbl">Max 20x</span><span class="tt-val">~880,000 tokens / session</span></div>
+    <div class="tt-note">⚠ These are community-derived estimates based on observed usage patterns and token multipliers — <strong>not officially confirmed by Anthropic</strong>. Provided for reference only and should not be used as the basis for vendor selection.</div>
+    <div class="tt-source">📖 <a href="https://lord.technology/2026/03/28/claude-team-premium-vs-max-plans-usage-limits-pricing-and-which-to-choose.html" target="_blank" rel="noopener">lord.technology — Claude Team &amp; Max plan analysis</a></div>`;
+  TT.classList.add('tt-visible');
+  positionTT(triggerEl);
+}
+
 
 function showAntPlanTT(triggerEl) {
   clearTimeout(ttHideTimer);
