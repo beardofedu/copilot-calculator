@@ -160,6 +160,18 @@
     header h1 { font-size: 20px; font-weight: 600; }
     header p { color: var(--muted); font-size: 13px; margin-top: 2px; }
 
+    /* ── Top disclaimer banner ───────────────────────────── */
+    .top-disclaimer {
+      background: rgba(210,153,34,.12);
+      border-bottom: 2px solid rgba(210,153,34,.5);
+      padding: 12px 24px;
+      font-size: 13px;
+      color: #e3b341;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .top-disclaimer strong { color: #f0c040; }
+
     /* ── Layout ──────────────────────────────────────────── */
     .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
 
@@ -613,6 +625,13 @@
     <p>Compare token-based model pricing and seat costs between GitHub Copilot and Anthropic's direct API.</p>
   </div>
 </header>
+
+<div class="top-disclaimer">
+  ⚠️ <strong>Unofficial community tool — not created, endorsed, or maintained by GitHub or Anthropic.</strong>
+  This calculator is provided as an illustrative example only. Pricing, credit allocations, and plan details may change at any time.
+  Always verify costs against the official <a href="https://docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-copilot/about-billing-for-github-copilot" target="_blank" rel="noopener" style="color:#f0c040">GitHub Copilot billing docs</a>
+  and <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener" style="color:#f0c040">Anthropic pricing</a> before making purchasing decisions.
+</div>
 
 <div class="container">
 
