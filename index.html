@@ -780,7 +780,10 @@
             <select id="antSeatPlan" onchange="calculate()">
               <option value="0">Free — $0/user/month</option>
               <option value="20" selected>Pro — $20/user/month</option>
-              <option value="30">Team — $30/user/month</option>
+              <option value="100">Max 5x — $100/user/month</option>
+              <option value="200">Max 20x — $200/user/month</option>
+              <option value="25">Team Standard — $25/user/month</option>
+              <option value="125">Team Premium — $125/user/month</option>
             </select>
           </div>
         </div>
@@ -801,18 +804,18 @@
           </div>
           <div class="seat-stat">
             <div class="stat-val" id="antIncludedCreditsDisplay">—</div>
-            <div class="stat-lbl">Included Credits</div>
+            <div class="stat-lbl">Purchased API Credits</div>
           </div>
         </div>
 
-        <!-- ── Included Credits ── -->
-        <div class="section-title" style="margin-top:4px">Included Credits <i class="tt-icon" onmouseenter="showAntCreditsTT(this)" onmouseleave="scheduleTTHide()">ⓘ</i></div>
+        <!-- ── Purchased API Credits ── -->
+        <div class="section-title" style="margin-top:4px">Purchased API Credits <i class="tt-icon" onmouseenter="showAntCreditsTT(this)" onmouseleave="scheduleTTHide()">ⓘ</i></div>
         <div class="info-banner" style="margin-bottom:10px">
-          Anthropic includes API credits with paid plans but doesn't publicly disclose the amount. Enter the credits included with your subscription.
+          Claude.ai subscription usage is separate from Anthropic API billing. If you have purchased Anthropic usage credits for API overage, enter their dollar value below; otherwise leave it at <strong>$0</strong>.
         </div>
         <div class="inline-2" style="align-items:flex-end">
           <div class="field">
-            <label id="antCreditsLabel">Credits per user / month</label>
+            <label id="antCreditsLabel">Purchased API usage credits ($)</label>
             <input type="number" id="antIncludedCredits" value="0" min="0" oninput="calculate()" placeholder="0" />
           </div>
           <div class="field" style="display:flex;align-items:center;padding-bottom:6px">
@@ -820,7 +823,7 @@
               <input type="checkbox" id="antCreditsWholeAccount" />
               <div>
                 <div class="toggle-label">Whole account total</div>
-                <div class="toggle-desc">Use as total credits for the account instead of per user</div>
+                <div class="toggle-desc">Use as total purchased credits instead of per user</div>
               </div>
             </div>
           </div>
@@ -949,6 +952,12 @@ const COPILOT_MODELS = {
     { id: 'gpt54nano',      label: 'GPT-5.4 nano',            input: 0.20,  cachedInput: 0.02,  output: 1.25  },
     { id: 'gpt55',          label: 'GPT-5.5 (≤272K)',          input: 5.00,  cachedInput: 0.50,  output: 30.00 },
     { id: 'gpt55lc',        label: 'GPT-5.5 (>272K)',          input: 10.00, cachedInput: 1.00,  output: 45.00 },
+    { id: 'gpt56luna',      label: 'GPT-5.6 Luna (≤200K)',     input: 0.20,  cachedInput: 0.02,  cacheWrite: 0.25,  output: 1.20  },
+    { id: 'gpt56lunalc',    label: 'GPT-5.6 Luna (>200K)',     input: 0.40,  cachedInput: 0.04,  cacheWrite: 0.50,  output: 1.80  },
+    { id: 'gpt56sol',       label: 'GPT-5.6 Sol (≤272K)',      input: 5.00,  cachedInput: 0.50,  cacheWrite: 6.25,  output: 30.00 },
+    { id: 'gpt56sollc',     label: 'GPT-5.6 Sol (>272K)',      input: 10.00, cachedInput: 1.00,  cacheWrite: 12.50, output: 45.00 },
+    { id: 'gpt56terra',     label: 'GPT-5.6 Terra (≤272K)',    input: 2.00,  cachedInput: 0.20,  cacheWrite: 2.50,  output: 12.00 },
+    { id: 'gpt56terralc',   label: 'GPT-5.6 Terra (>272K)',    input: 4.00,  cachedInput: 0.40,  cacheWrite: 5.00,  output: 18.00 },
   ],
   anthropic: [
     { id: 'haiku45',   label: 'Claude Haiku 4.5',  input: 1.00,  cachedInput: 0.10, cacheWrite: 1.25,  output: 5.00  },
@@ -959,6 +968,9 @@ const COPILOT_MODELS = {
     { id: 'opus46',    label: 'Claude Opus 4.6',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
     { id: 'opus47',    label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
     { id: 'opus48',    label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+    { id: 'opus48fast',label: 'Claude Opus 4.8 (fast mode) ⚠ Preview', input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+    { id: 'opus5',     label: 'Claude Opus 5',     input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+    { id: 'sonnet5',   label: 'Claude Sonnet 5 ⚠ Promo through Aug 31, 2026', input: 2.00, cachedInput: 0.20, cacheWrite: 2.50, output: 10.00 },
     { id: 'fable5',    label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
   ],
   google: [
@@ -967,12 +979,20 @@ const COPILOT_MODELS = {
     { id: 'gemini31pro',   label: 'Gemini 3.1 Pro (≤200K) ⚠', input: 2.00, cachedInput: 0.20,  output: 12.00 },
     { id: 'gemini31prolc', label: 'Gemini 3.1 Pro (>200K) ⚠', input: 4.00, cachedInput: 0.40,  output: 18.00 },
     { id: 'gemini35flash', label: 'Gemini 3.5 Flash',          input: 1.50, cachedInput: 0.15,  output: 9.00  },
+    { id: 'gemini36flash', label: 'Gemini 3.6 Flash',          input: 1.50, cachedInput: 0.15, output: 7.50  },
   ],
   github: [
     { id: 'raptormini',   label: 'Raptor mini ⚠ Preview', input: 0.25, cachedInput: 0.025, output: 2.00 },
   ],
   microsoft: [
     { id: 'maicodeflash', label: 'MAI-Code-1-Flash',       input: 0.75, cachedInput: 0.075, output: 4.50 },
+  ],
+  xai: [
+    { id: 'grok45',       label: 'Grok 4.5 (≤200K)',         input: 2.00, cachedInput: 0.50, output: 6.00 },
+    { id: 'grok45lc',     label: 'Grok 4.5 (>200K)',          input: 4.00, cachedInput: 1.00, output: 12.00 },
+  ],
+  moonshot: [
+    { id: 'kimi27',       label: 'Kimi K2.7 Code',            input: 0.95, cachedInput: 0.19, output: 4.00 },
   ],
 };
 
@@ -985,6 +1005,9 @@ const ANTHROPIC_MODELS = {
   'opus-4.6':   { label: 'Claude Opus 4.6',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
   'opus-4.7':   { label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
   'opus-4.8':   { label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+  'opus-4.8-fast': { label: 'Claude Opus 4.8 (fast mode)', input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+  'opus-5':     { label: 'Claude Opus 5',     input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25, output: 25.00 },
+  'sonnet-5':   { label: 'Claude Sonnet 5',   input: 2.00,  cachedInput: 0.20, cacheWrite: 2.50, output: 10.00 },
   'fable-5':    { label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
 };
 
@@ -1000,6 +1023,12 @@ const GH_TO_ANT_MAP = {
   gpt54nano:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
   gpt55:         { key: 'opus-4.8',   how: 'tier match (powerful)' },
   gpt55lc:       { key: 'opus-4.8',   how: 'tier match (powerful, long ctx)' },
+  gpt56luna:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gpt56lunalc:   { key: 'haiku-4.5',  how: 'tier match (lightweight, long ctx)' },
+  gpt56sol:      { key: 'opus-5',     how: 'tier match (powerful)' },
+  gpt56sollc:    { key: 'opus-5',     how: 'tier match (powerful, long ctx)' },
+  gpt56terra:    { key: 'sonnet-5',   how: 'tier match (versatile)' },
+  gpt56terralc:  { key: 'sonnet-5',   how: 'tier match (versatile, long ctx)' },
   // Anthropic — direct equivalents
   haiku45:       { key: 'haiku-4.5',  how: 'direct equivalent' },
   sonnet4:       { key: 'sonnet-4',   how: 'direct equivalent' },
@@ -1009,6 +1038,9 @@ const GH_TO_ANT_MAP = {
   opus46:        { key: 'opus-4.6',   how: 'direct equivalent' },
   opus47:        { key: 'opus-4.7',   how: 'direct equivalent' },
   opus48:        { key: 'opus-4.8',   how: 'direct equivalent' },
+  opus48fast:    { key: 'opus-4.8-fast', how: 'direct equivalent' },
+  opus5:         { key: 'opus-5',    how: 'direct equivalent' },
+  sonnet5:       { key: 'sonnet-5',  how: 'direct equivalent' },
   fable5:        { key: 'fable-5',    how: 'direct equivalent' },
   // Google
   gemini25pro:   { key: 'sonnet-4.6', how: 'tier match (powerful)' },
@@ -1016,9 +1048,13 @@ const GH_TO_ANT_MAP = {
   gemini31pro:   { key: 'opus-4.7',   how: 'tier match (powerful)' },
   gemini31prolc: { key: 'opus-4.7',   how: 'tier match (powerful, long ctx)' },
   gemini35flash: { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gemini36flash: { key: 'haiku-4.5', how: 'tier match (versatile)' },
   // GitHub / Microsoft
   raptormini:    { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
   maicodeflash:  { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  grok45:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
+  grok45lc:      { key: 'sonnet-4.6', how: 'tier match (versatile, long ctx)' },
+  kimi27:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
 };
 
 // ── Row ID counters ──────────────────────────────────────────────────────────
@@ -1046,7 +1082,9 @@ function providerOptionsHTML() {
     <option value="anthropic">Anthropic</option>
     <option value="google">Google</option>
     <option value="github">Fine-tuned (GitHub)</option>
-    <option value="microsoft">Microsoft</option>`;
+    <option value="microsoft">Microsoft</option>
+    <option value="xai">xAI</option>
+    <option value="moonshot">Moonshot AI</option>`;
 }
 
 function modelOptionsHTML(provider) {
@@ -1244,6 +1282,7 @@ function toggleDiscount(vendor, event) {
 
 const GH_DOCS_URL = 'https://docs.github.com/en/enterprise-cloud@latest/copilot/reference/copilot-billing/models-and-pricing';
 const ANT_PRICING_URL = 'https://claude.com/pricing';
+const ANT_API_PRICING_URL = 'https://platform.claude.com/docs/en/docs/about-claude/pricing';
 
 const STATIC_TOOLTIPS = {
   'gh-business': {
@@ -1266,7 +1305,10 @@ const STATIC_TOOLTIPS = {
 const ANT_PLAN_DETAILS = {
   '0':  { name: 'Free',       rows: [['Seat cost','$0 / user / month'],['Usage','Limited (throttled at caps)'],['Models','Claude Haiku & Sonnet'],['API access','Not included']] },
   '20': { name: 'Pro',        rows: [['Seat cost','$20 / user / month'],['Usage','5× more than Free plan'],['Models','All Claude models'],['API access','Via claude.ai (not direct API)']] },
-  '30': { name: 'Team',       rows: [['Seat cost','$30 / user / month'],['Min seats','5 users'],['Usage','Higher than Pro'],['Features','Admin controls, collaboration'],['API access','Via claude.ai']] },
+  '100': { name: 'Max 5x',    rows: [['Seat cost','$100 / user / month'],['Usage','5× more than Pro'],['Models','All Claude models'],['API access','Via claude.ai (not direct API)']] },
+  '200': { name: 'Max 20x',   rows: [['Seat cost','$200 / user / month'],['Usage','20× more than Pro'],['Models','All Claude models'],['API access','Via claude.ai (not direct API)']] },
+  '25': { name: 'Team Standard', rows: [['Seat cost','$25 / user / month'],['Minimum seats','2 users'],['Usage','More than Pro'],['Features','Admin controls, collaboration'],['API access','Via claude.ai (not direct API)']] },
+  '125': { name: 'Team Premium', rows: [['Seat cost','$125 / user / month'],['Minimum seats','2 users'],['Usage','5× more than Team Standard'],['Features','Admin controls, collaboration'],['API access','Via claude.ai (not direct API)']] },
 };
 
 let ttHideTimer = null;
@@ -1313,13 +1355,9 @@ function showTT(triggerEl, key) {
 function showAntCreditsTT(triggerEl) {
   clearTimeout(ttHideTimer);
   TT.innerHTML = `
-    <div class="tt-title">Estimated Plan Credit Allocations</div>
-    <div class="tt-row"><span class="tt-lbl">Team Standard</span><span class="tt-val">~55,000 tokens / session</span></div>
-    <div class="tt-row"><span class="tt-lbl">Team Premium</span><span class="tt-val">~275,000 tokens / session</span></div>
-    <div class="tt-row"><span class="tt-lbl">Max 5x</span><span class="tt-val">~220,000 tokens / session</span></div>
-    <div class="tt-row"><span class="tt-lbl">Max 20x</span><span class="tt-val">~880,000 tokens / session</span></div>
-    <div class="tt-note">⚠ These are community-derived estimates based on observed usage patterns and token multipliers — <strong>not officially confirmed by Anthropic</strong>. Provided for reference only and should not be used as the basis for vendor selection.</div>
-    <div class="tt-source">📖 <a href="https://lord.technology/2026/03/28/claude-team-premium-vs-max-plans-usage-limits-pricing-and-which-to-choose.html" target="_blank" rel="noopener">lord.technology — Claude Team &amp; Max plan analysis</a></div>`;
+    <div class="tt-title">Anthropic API usage credits</div>
+    <div class="tt-note">Claude.ai plans do not include a fixed API-token credit pool. Optional usage credits are purchased separately and are billed at standard API rates.</div>
+    <div class="tt-source">📖 <a href="https://support.claude.com/en/articles/12429409-manage-usage-credits-for-paid-claude-plans" target="_blank" rel="noopener">Claude Help Center — Manage usage credits</a></div>`;
   TT.classList.add('tt-visible');
   positionTT(triggerEl);
 }
@@ -1356,7 +1394,7 @@ function showModelTT(triggerEl, vendor, rowId) {
     const modelKey = rowEl.querySelector('[data-field="model"]').value;
     model = ANTHROPIC_MODELS[modelKey];
     sourceText = 'Anthropic pricing';
-    sourceUrl  = ANT_PRICING_URL;
+    sourceUrl  = ANT_API_PRICING_URL;
   }
   if (!model) return;
 
@@ -1566,19 +1604,18 @@ function calculate() {
   const antSeatCostRaw = antPlanPrice * antSeatUsers;
   const antSeatCost    = applyDiscount(antSeatCostRaw, antSeatDiscPct);
 
-  // ── Included credits ───────────────────────────────────────
+  // ── Purchased API usage credits ────────────────────────────
   const antRawCredits        = Math.max(0, parseFloat($('antIncludedCredits').value) || 0);
   const antCreditsWholeAcct  = $('antCreditsWholeAccount').checked;
-  const antIncludedCreditTotal = antCreditsWholeAcct ? antRawCredits : antRawCredits * antSeatUsers;
-  const antIncludedCreditsValue = antIncludedCreditTotal * 0.01;
+  const antPurchasedCreditValue = antCreditsWholeAcct ? antRawCredits : antRawCredits * antSeatUsers;
 
   // Update Anthropic seat summary
-  const antPlanNames = { '0': 'Free', '20': 'Pro', '30': 'Team' };
+  const antPlanNames = { '0': 'Free', '20': 'Pro', '100': 'Max 5x', '200': 'Max 20x', '25': 'Team Standard', '125': 'Team Premium' };
   $('antTotalSeats').textContent      = antSeatUsers.toLocaleString();
   $('antMonthlySeatCost').textContent = fmt(antSeatCostRaw);
   $('antPlanName').textContent        = antPlanNames[String(antPlanPrice)] || 'Pro';
-  $('antIncludedCreditsDisplay').textContent = antIncludedCreditTotal > 0
-    ? `${fmtCred(antIncludedCreditTotal)}`
+  $('antIncludedCreditsDisplay').textContent = antPurchasedCreditValue > 0
+    ? fmt(antPurchasedCreditValue)
     : '—';
 
   const antMirrorOn = $('antMirrorEnabled').checked;
@@ -1693,8 +1730,8 @@ function calculate() {
     });
   }
 
-  const antApiOverage     = Math.max(0, antTokenTotal - antIncludedCreditsValue);
-  const antCreditOffset   = Math.min(antTokenTotal, antIncludedCreditsValue);
+  const antApiOverage     = Math.max(0, antTokenTotal - antPurchasedCreditValue);
+  const antCreditOffset   = Math.min(antTokenTotal, antPurchasedCreditValue);
   const antTotal          = antSeatCost + antApiOverage;
 
   $('antModelTag').textContent = antMirrorOn
@@ -1707,10 +1744,10 @@ function calculate() {
   if (antSeatDiscPct > 0)
     antHTML += brow(`Seat discount (${antSeatDiscPct}%)`, '−' + fmt(antSeatCostRaw - antSeatCost), 'discount-row');
   antHTML += brow('Net seat cost', fmt(antSeatCost));
-  if (antIncludedCreditTotal > 0)
+  if (antPurchasedCreditValue > 0)
     antHTML += brow(
-      `Included credits (${fmtCred(antIncludedCreditTotal)} · ${antCreditsWholeAcct ? 'whole account' : antSeatUsers + ' users'})`,
-      fmt(antIncludedCreditsValue)
+      `Purchased API credits (${fmt(antPurchasedCreditValue)} · ${antCreditsWholeAcct ? 'whole account' : antSeatUsers + ' users'})`,
+      fmt(antPurchasedCreditValue)
     );
   if (antModelSummaries.length)
     antHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
@@ -1736,11 +1773,11 @@ function calculate() {
   if (antTokenDiscPct > 0)
     antHTML += brow(`Token rate discount (${antTokenDiscPct}%)`, '✓', 'discount-row');
   antHTML += brow('Token subtotal', fmt(antTokenTotal));
-  if (antIncludedCreditTotal > 0) {
+  if (antPurchasedCreditValue > 0) {
     if (antCreditOffset > 0)
-      antHTML += brow(`Credit offset (${fmtCred(antIncludedCreditTotal)} included)`, '−' + fmt(antCreditOffset), 'discount-row');
+      antHTML += brow(`Credit offset (${fmt(antPurchasedCreditValue)} purchased)`, '−' + fmt(antCreditOffset), 'discount-row');
     if (antApiOverage === 0 && antTokenTotal > 0)
-      antHTML += brow('API usage within included pool', `✓ ${fmt(antIncludedCreditsValue - antTokenTotal)} remaining`);
+      antHTML += brow('API usage within purchased credits', `✓ ${fmt(antPurchasedCreditValue - antTokenTotal)} remaining`);
     else if (antApiOverage > 0)
       antHTML += brow(`API overage`, fmt(antApiOverage), 'overage-row');
   }
@@ -1777,14 +1814,14 @@ function calculate() {
       <td>${fmt(antSeatCostRaw)} (${antSeatUsers} × ${antPlanLabel})</td>
     </tr>
     <tr>
-      <td>Included AI credits (value)</td>
+      <td>AI credits / API usage</td>
       <td>${fmt(includedCredits * 0.01)} (${fmtCred(includedCredits)} credits)</td>
-      <td>${antIncludedCreditTotal > 0 ? fmt(antIncludedCreditsValue) + ' (' + fmtCred(antIncludedCreditTotal) + ' credits)' : '—'}</td>
+      <td>${antPurchasedCreditValue > 0 ? fmt(antPurchasedCreditValue) + ' purchased' : 'No credits purchased'}</td>
     </tr>
     <tr>
       <td>Token / API costs</td>
       <td>${fmt(overageCost)} overage</td>
-      <td>${antIncludedCreditTotal > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
+      <td>${antPurchasedCreditValue > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
     </tr>
     <tr>
       <td><strong>Total / month</strong></td>
