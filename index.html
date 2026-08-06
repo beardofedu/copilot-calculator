@@ -712,7 +712,7 @@
 
         <!-- ── Optional Direct Credit Input ── -->
         <div class="section-title" style="margin-top:20px">
-          <div class="toggle-row" onclick="toggleGhDirectCredits()" style="border:none;background:none;padding:0">
+          <div class="toggle-row" onclick="toggleGhDirectCredits(event)" style="border:none;background:none;padding:0">
             <input type="checkbox" id="ghDirectCreditsEnabled" style="width:14px;height:14px;accent-color:var(--accent-blue-light);flex-shrink:0" />
             <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">
               Know Your AI Credit Usage? Enter Directly
@@ -730,7 +730,7 @@
 
         <!-- ── Vendor Discount ── -->
         <div class="section-title">Vendor Discount</div>
-        <div class="toggle-row" onclick="toggleDiscount('gh')">
+        <div class="toggle-row" onclick="toggleDiscount('gh', event)">
           <input type="checkbox" id="ghDiscountEnabled" />
           <div>
             <div class="toggle-label">Apply GitHub Copilot Discount</div>
@@ -816,7 +816,7 @@
             <input type="number" id="antIncludedCredits" value="0" min="0" oninput="calculate()" placeholder="0" />
           </div>
           <div class="field" style="display:flex;align-items:center;padding-bottom:6px">
-            <div class="toggle-row" onclick="toggleAntCreditsMode()" style="border:none;background:none;padding:0;margin:0">
+            <div class="toggle-row" onclick="toggleAntCreditsMode(event)" style="border:none;background:none;padding:0;margin:0">
               <input type="checkbox" id="antCreditsWholeAccount" />
               <div>
                 <div class="toggle-label">Whole account total</div>
@@ -833,7 +833,7 @@
         </div>
 
         <!-- Mirror toggle -->
-        <div class="toggle-row" onclick="toggleAntMirror()" style="margin-bottom:10px">
+        <div class="toggle-row" onclick="toggleAntMirror(event)" style="margin-bottom:10px">
           <input type="checkbox" id="antMirrorEnabled" />
           <div>
             <div class="toggle-label">Assume same usage as GitHub Copilot side</div>
@@ -864,7 +864,7 @@
 
         <!-- ── Vendor Discount ── -->
         <div class="section-title">Vendor Discount</div>
-        <div class="toggle-row" onclick="toggleDiscount('ant')">
+        <div class="toggle-row" onclick="toggleDiscount('ant', event)">
           <input type="checkbox" id="antDiscountEnabled" />
           <div>
             <div class="toggle-label">Apply Anthropic Discount</div>
@@ -1232,10 +1232,10 @@ function onGhCreditProviderChange(id) {
 
 // ── Toggle Helpers ────────────────────────────────────────────────────────────
 
-function toggleDiscount(vendor) {
+function toggleDiscount(vendor, event) {
   const cb  = $(vendor === 'gh' ? 'ghDiscountEnabled' : 'antDiscountEnabled');
   const div = $(vendor === 'gh' ? 'ghDiscountInputs'  : 'antDiscountInputs');
-  cb.checked = !cb.checked;
+  if (event?.target !== cb) cb.checked = !cb.checked;
   div.classList.toggle('hidden', !cb.checked);
   calculate();
 }
@@ -1379,26 +1379,26 @@ function scheduleTTHide() {
 TT.addEventListener('mouseenter', () => clearTimeout(ttHideTimer));
 TT.addEventListener('mouseleave', scheduleTTHide);
 
-function toggleGhDirectCredits() {
+function toggleGhDirectCredits(event) {
   const cb  = $('ghDirectCreditsEnabled');
   const div = $('ghDirectCreditsSection');
-  cb.checked = !cb.checked;
+  if (event?.target !== cb) cb.checked = !cb.checked;
   div.classList.toggle('hidden', !cb.checked);
   calculate();
 }
 
-function toggleAntMirror() {
+function toggleAntMirror(event) {
   const cb = $('antMirrorEnabled');
-  cb.checked = !cb.checked;
+  if (event?.target !== cb) cb.checked = !cb.checked;
   $('antMirrorDisclaimer').classList.toggle('hidden', !cb.checked);
   $('antMirroredContainer').classList.toggle('hidden', !cb.checked);
   $('antManualRows').classList.toggle('hidden', cb.checked);
   calculate();
 }
 
-function toggleAntCreditsMode() {
+function toggleAntCreditsMode(event) {
   const cb = $('antCreditsWholeAccount');
-  cb.checked = !cb.checked;
+  if (event?.target !== cb) cb.checked = !cb.checked;
   $('antCreditsLabel').textContent = cb.checked
     ? 'Total account credits / month'
     : 'Credits per user / month';
