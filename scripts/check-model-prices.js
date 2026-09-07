@@ -59,6 +59,14 @@ const MODEL_MAP = [
   { ids: ['kimi27'],              docLabel: 'Kimi K2.7 Code' },
 ];
 
+// Build a single id -> MODEL_MAP entry lookup for O(1) access per line.
+const ID_TO_ENTRY = new Map();
+for (const entry of MODEL_MAP) {
+  for (const id of entry.ids) {
+    ID_TO_ENTRY.set(`'${id}'`, entry);
+  }
+}
+
 function parseDollar(cell) {
   const trimmed = (cell || '').trim();
   if (!trimmed || /not applicable/i.test(trimmed)) return undefined;
@@ -119,21 +127,25 @@ function buildDocPriceIndex(markdown) {
 }
 
 function fmtNum(n) {
-  let s = n.toFixed(3).replace(/0+$/, '').replace(/\.$/, '.00');
-  if (!s.includes('.')) s += '.00';
-  const decimals = s.split('.')[1].length;
-  if (decimals < 2) s = n.toFixed(2);
-  return s;
+  // Use 3 decimal places only when needed to represent the value exactly
+  // (e.g. 0.025, 0.075); otherwise use the conventional 2 decimal places.
+  const rounded1000 = Math.round(n * 1000);
+  const needsThreeDecimals = rounded1000 % 10 !== 0;
+  return n.toFixed(needsThreeDecimals ? 3 : 2);
 }
 
 function updateField(line, key, newVal) {
   if (newVal === undefined) return line;
-  const re = new RegExp('(\\b' + key + ':\\s*)([0-9.]+)');
+  const re = fieldRegex(key);
   const match = line.match(re);
   if (!match) return line;
   const oldVal = parseFloat(match[2]);
   if (Math.abs(oldVal - newVal) < 1e-9) return line;
   return line.replace(re, `$1${fmtNum(newVal)}`);
+}
+
+function fieldRegex(key) {
+  return new RegExp('(\\b' + key + ':\\s*)([0-9.]+)');
 }
 
 async function main() {
@@ -149,10 +161,12 @@ async function main() {
   const changes = [];
 
   for (let i = 0; i < lines.length; i++) {
-    for (const entry of MODEL_MAP) {
-      const idOnLine = entry.ids.find(id => lines[i].includes(`'${id}'`));
-      if (!idOnLine) continue;
+    const quoted = lines[i].match(/'[^']+'/g) || [];
+    for (const token of quoted) {
+      const entry = ID_TO_ENTRY.get(token);
+      if (!entry) continue;
 
+      const idOnLine = token.slice(1, -1);
       const key = entry.docLabel + '|' + (entry.tier || '');
       const official = docPrices.get(key);
       if (!official) continue;
@@ -162,7 +176,7 @@ async function main() {
         const before = line;
         line = updateField(line, field, official[field]);
         if (line !== before) {
-          changes.push(`${idOnLine}: ${field} ${before.match(new RegExp(field + ':\\s*([0-9.]+)'))[1]} -> ${fmtNum(official[field])}`);
+          changes.push(`${idOnLine}: ${field} ${before.match(fieldRegex(field))[2]} -> ${fmtNum(official[field])}`);
         }
       }
       lines[i] = line;
