@@ -40,7 +40,6 @@ The **Monthly Cost Breakdown** section shows a full line-item breakdown for each
 
 - Code completions on GitHub Copilot are **unlimited** and do not consume AI credits — this calculator only covers token-based model usage and seat costs.
 - The **"Assume same usage"** mirror mode on the Anthropic side maps Copilot model tiers to roughly equivalent Anthropic models. It is an illustrative estimate only — model quality, latency, context windows, and capabilities differ meaningfully.
-- Promotional or trial credits (e.g., GitHub's temporary promotional credit boost through August 2026) are **not** included in calculations.
 - Claude.ai plans do not include a fixed API-token credit pool. Optional usage credits are purchased separately and API usage is billed at standard Anthropic rates.
 
 ---
