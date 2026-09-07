@@ -734,7 +734,7 @@
 
   <!-- ── 1M Credits Example ────────────────────────────────────── -->
   <div class="example-banner" id="exampleBanner">
-    <div class="example-info" role="button" tabindex="0" onclick="applyExample()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyExample();}">
+    <div class="example-info" role="button" tabindex="0" onclick="applyExample()" onkeydown="if(!event.repeat&&(event.key==='Enter'||event.key===' ')){event.preventDefault();applyExample();}">
       <span class="example-icon" aria-hidden="true">⚡</span>
       <div>
         <div class="example-title">Try an example: 100 users · 1,000,000 AI Credits (Claude Opus 4.8 equivalent)</div>
@@ -2513,11 +2513,8 @@ function resetExample() {
   // Reset third-party competitor (rebuilds seats/plan/model row from its defaults)
   $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
   if ($('thirdDiscountEnabled').checked) toggleDiscount('third');
-  if ($('thirdCompetitorSelect').value) {
-    onThirdCompetitorChange();
-  } else {
-    clearThirdModelRows();
-  }
+  $('thirdCompetitorSelect').value = '';
+  onThirdCompetitorChange();
 
   calculate();
 }
@@ -2525,6 +2522,11 @@ function resetExample() {
 function init() {
   populateThirdCompetitorOptions();
 
+  $('ghBusinessSeats').value = DEFAULT_GH_BUSINESS_SEATS;
+  $('ghEnterpriseSeats').value = DEFAULT_GH_ENTERPRISE_SEATS;
+  $('antSeatUsers').value = DEFAULT_ANT_SEATS;
+  $('antSeatPlan').value = DEFAULT_ANT_PLAN;
+  $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
   seedDefaultGhModelRow();
   seedDefaultAntModelRow();
 
