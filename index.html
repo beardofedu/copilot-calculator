@@ -952,7 +952,7 @@
       <div class="card-header third-header">
         <span id="thirdIcon">🧩</span>
         <span id="thirdCardName">Competitor</span>
-        <span class="badge third-badge">Seat + API Usage</span>
+        <span class="badge third-badge" id="thirdBadge">Seat + API Usage</span>
       </div>
       <div class="card-body">
 
@@ -1396,8 +1396,6 @@ function buildAntModelRow(id, defaultModel = 'sonnet-4.5') {
 }
 
 function buildThirdModelRow(id, provider) {
-  const models = COPILOT_MODELS[provider] || [];
-  const defaultModelId = models.length ? models[0].id : '';
   const el = document.createElement('div');
   el.className = 'model-row';
   el.id = 'thirdrow-' + id;
@@ -1570,6 +1568,7 @@ function onThirdCompetitorChange() {
 
   $('thirdIcon').textContent      = competitor.icon;
   $('thirdCardName').textContent  = competitor.name;
+  $('thirdBadge').textContent     = competitor.modelsProvider ? 'Seat + API Usage' : 'Seat-based only';
   $('thirdResultName').textContent = competitor.name;
   $('thirdColHeader').textContent  = competitor.name;
   $('thirdInfoBanner').innerHTML   = competitor.infoBanner;
@@ -2153,7 +2152,7 @@ function calculate() {
       const outputCost     = applyDiscount(r.outputM     * r.model.output, thirdTokenDiscPct);
       const rowTotal       = inputCost + cachedCost + cacheWriteCost + outputCost;
       thirdTokenTotal += rowTotal;
-      thirdModelSummaries.push({ label: r.model.label, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal });
+      thirdModelSummaries.push({ label: r.model.label, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal, hasCacheWrite: !!r.model.cacheWrite });
 
       const costEl = $('thirdrow-' + r.id + '-cost');
       if (costEl) {
@@ -2180,7 +2179,7 @@ function calculate() {
       thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">API Token Usage</div>`;
       thirdModelSummaries.forEach(s => {
         thirdHTML += brow(s.label, fmt(s.rowTotal));
-        thirdHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}  CW: ${fmt(s.cacheWriteCost)}  Out: ${fmt(s.outputCost)}`, '', '');
+        thirdHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}${s.hasCacheWrite ? `  CW: ${fmt(s.cacheWriteCost)}` : ''}  Out: ${fmt(s.outputCost)}`, '', '');
       });
       if (thirdTokenDiscPct > 0)
         thirdHTML += brow(`Token rate discount (${thirdTokenDiscPct}%)`, '✓', 'discount-row');
@@ -2234,13 +2233,13 @@ function calculate() {
       <td>AI credits / API usage</td>
       <td>${fmt(includedCredits * 0.01)} (${fmtCred(includedCredits)} credits)</td>
       <td>${antPurchasedCreditValue > 0 ? fmt(antPurchasedCreditValue) + ' purchased' : 'No credits purchased'}</td>
-      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? 'n/a — seat-based only' : ''}</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? (thirdCompetitor.modelsProvider ? 'n/a — optional API usage below' : 'n/a — seat-based only') : ''}</td>
     </tr>
     <tr>
       <td>Token / API costs</td>
       <td>${fmt(overageCost)} overage</td>
       <td>${antPurchasedCreditValue > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
-      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? fmt(thirdTokenTotal) : ''}</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? (thirdCompetitor.modelsProvider ? fmt(thirdTokenTotal) : 'n/a') : ''}</td>
     </tr>
     <tr>
       <td><strong>Total / month</strong></td>
