@@ -1479,13 +1479,17 @@ function removeAntModelRow(id) {
   calculate();
 }
 
+function seedThirdModelRow(provider) {
+  const id = nextId++;
+  thirdRowIds.push(id);
+  $('thirdModelRowsContainer').appendChild(buildThirdModelRow(id, provider));
+}
+
 function addThirdModelRow() {
   const competitorKey = $('thirdCompetitorSelect').value;
   const competitor = THIRD_PARTY_COMPETITORS[competitorKey];
   if (!competitor || !competitor.modelsProvider) return;
-  const id = nextId++;
-  thirdRowIds.push(id);
-  $('thirdModelRowsContainer').appendChild(buildThirdModelRow(id, competitor.modelsProvider));
+  seedThirdModelRow(competitor.modelsProvider);
   calculate();
 }
 
@@ -1575,9 +1579,7 @@ function onThirdCompetitorChange() {
 
   $('thirdModelSection').classList.toggle('hidden', !competitor.modelsProvider);
   if (competitor.modelsProvider) {
-    const id = nextId++;
-    thirdRowIds.push(id);
-    $('thirdModelRowsContainer').appendChild(buildThirdModelRow(id, competitor.modelsProvider));
+    seedThirdModelRow(competitor.modelsProvider);
   }
 
   calculate();
@@ -2192,7 +2194,7 @@ function calculate() {
   // ── Summary ────────────────────────────────────────────────
   const entries = [
     { key: 'gh',   label: 'GitHub Copilot',     total: ghTotal,  winnerCls: 'winner-gh',    savingsCls: 'savings-gh' },
-    { key: 'ant',  label: 'Anthropic Claude.ai', total: antTotal, winnerCls: 'winner-ant',   savingsCls: 'savings-ant' },
+    { key: 'ant',  label: 'Anthropic API', total: antTotal, winnerCls: 'winner-ant',   savingsCls: 'savings-ant' },
   ];
   if (thirdCompetitor)
     entries.push({ key: 'third', label: thirdCompetitor.name, total: thirdTotal, winnerCls: 'winner-third', savingsCls: 'savings-third' });
