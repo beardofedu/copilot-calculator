@@ -2419,6 +2419,7 @@ function applyExampleToGh() {
   if ($('ghDirectCreditsEnabled').checked) toggleGhDirectCredits();
   ghCreditIds = [];
   $('ghCreditRowsContainer').innerHTML = '';
+  if ($('ghDiscountEnabled').checked) toggleDiscount('gh');
 
   ghRowIds = [];
   $('ghModelRowsContainer').innerHTML = '';
@@ -2430,6 +2431,7 @@ function applyExampleToAnt() {
   $('antIncludedCredits').value = 0;
   if ($('antCreditsWholeAccount').checked) toggleAntCreditsMode();
   if ($('antMirrorEnabled').checked) toggleAntMirror();
+  if ($('antDiscountEnabled').checked) toggleDiscount('ant');
 
   antRowIds = [];
   $('antModelRowsContainer').innerHTML = '';
@@ -2439,22 +2441,20 @@ function applyExampleToAnt() {
 function applyExampleToThird() {
   const key = $('thirdCompetitorSelect').value;
   const competitor = THIRD_PARTY_COMPETITORS[key];
+  clearThirdModelRows();
+  if ($('thirdDiscountEnabled').checked) toggleDiscount('third');
+
   if (!competitor) {
     // No competitor selected: nothing to seed, but clear any stale example
     // rows/seats left over from a previously selected competitor.
     $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
-    clearThirdModelRows();
     return;
   }
 
   $('thirdSeatUsers').value = EXAMPLE_USERS;
 
-  if (!competitor.modelsProvider) {
-    clearThirdModelRows();
-    return;
-  }
+  if (!competitor.modelsProvider) return;
 
-  clearThirdModelRows();
   const providerModels = COPILOT_MODELS[competitor.modelsProvider] || [];
   if (!EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider]) {
     console.warn(`No EXAMPLE_FLAGSHIP_MODEL entry for provider "${competitor.modelsProvider}"; falling back to its first listed model.`);
