@@ -1208,10 +1208,10 @@ const THIRD_PARTY_COMPETITORS = {
     infoBanner: 'Cursor is an AI-first code editor with a <strong>seat-based pricing model</strong> that includes a monthly usage credit pool. Additional usage beyond the plan\'s pool is billed as overage.',
     modelsProvider: null,
     plans: [
-      { value: '0',   label: 'Hobby — $0/user/month' },
-      { value: '20',  label: 'Pro — $20/user/month' },
-      { value: '40',  label: 'Teams Standard — $40/user/month', selected: true },
-      { value: '120', label: 'Teams Premium — $120/user/month' },
+      { value: '0',   name: 'Hobby',          label: 'Hobby — $0/user/month' },
+      { value: '20',  name: 'Pro',            label: 'Pro — $20/user/month' },
+      { value: '40',  name: 'Teams Standard', label: 'Teams Standard — $40/user/month', selected: true },
+      { value: '120', name: 'Teams Premium',  label: 'Teams Premium — $120/user/month' },
     ],
     source: { text: 'Cursor pricing', url: 'https://cursor.com/pricing' },
   },
@@ -1221,8 +1221,8 @@ const THIRD_PARTY_COMPETITORS = {
     infoBanner: 'Amazon Q Developer uses a <strong>seat-based pricing model</strong>. The Pro tier includes higher usage limits than the Free tier; overage for large code transformations is billed separately.',
     modelsProvider: null,
     plans: [
-      { value: '0',  label: 'Free — $0/user/month' },
-      { value: '19', label: 'Pro — $19/user/month', selected: true },
+      { value: '0',  name: 'Free', label: 'Free — $0/user/month' },
+      { value: '19', name: 'Pro',  label: 'Pro — $19/user/month', selected: true },
     ],
     source: { text: 'Amazon Q Developer pricing', url: 'https://aws.amazon.com/q/developer/pricing/' },
   },
@@ -1232,8 +1232,8 @@ const THIRD_PARTY_COMPETITORS = {
     infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong> (annual commitment pricing shown). Optional direct Gemini API usage can be added below using standard per-token rates.',
     modelsProvider: 'google',
     plans: [
-      { value: '19', label: 'Standard — $19/user/month', selected: true },
-      { value: '45', label: 'Enterprise — $45/user/month' },
+      { value: '19', name: 'Standard',   label: 'Standard — $19/user/month', selected: true },
+      { value: '45', name: 'Enterprise', label: 'Enterprise — $45/user/month' },
     ],
     source: { text: 'Gemini Code Assist pricing', url: 'https://cloud.google.com/products/gemini/pricing' },
   },
@@ -1243,9 +1243,9 @@ const THIRD_PARTY_COMPETITORS = {
     infoBanner: 'ChatGPT Business/Enterprise uses a <strong>seat-based pricing model</strong>. Optional direct OpenAI API usage can be added below using standard per-token rates.',
     modelsProvider: 'openai',
     plans: [
-      { value: '25',  label: 'Business Standard — $25/user/month', selected: true },
-      { value: '125', label: 'Business Premium — $125/user/month' },
-      { value: '60',  label: 'Enterprise (est.) — $60/user/month' },
+      { value: '25',  name: 'Business Standard',    label: 'Business Standard — $25/user/month', selected: true },
+      { value: '125', name: 'Business Premium',     label: 'Business Premium — $125/user/month' },
+      { value: '60',  name: 'Enterprise (est.)',    label: 'Enterprise (est.) — $60/user/month' },
     ],
     source: { text: 'OpenAI ChatGPT pricing', url: 'https://openai.com/chatgpt/pricing/' },
   },
@@ -1527,8 +1527,10 @@ function onGhCreditProviderChange(id) {
 
 // ── Toggle Helpers ────────────────────────────────────────────────────────────
 
+const VENDOR_KEYS = ['gh', 'ant', 'third'];
+
 function toggleDiscount(vendor, event) {
-  if (!['gh', 'ant', 'third'].includes(vendor)) return;
+  if (!VENDOR_KEYS.includes(vendor)) return;
   const cb  = $(vendor + 'DiscountEnabled');
   const div = $(vendor + 'DiscountInputs');
   if (event?.target !== cb) cb.checked = !cb.checked;
@@ -1574,7 +1576,7 @@ function onThirdCompetitorChange() {
 
   const planSel = $('thirdSeatPlan');
   planSel.innerHTML = competitor.plans.map(p =>
-    `<option value="${p.value}" ${p.selected ? 'selected' : ''}>${p.label}</option>`
+    `<option value="${p.value}" data-name="${p.name}" ${p.selected ? 'selected' : ''}>${p.label}</option>`
   ).join('');
 
   $('thirdModelSection').classList.toggle('hidden', !competitor.modelsProvider);
@@ -2135,7 +2137,7 @@ function calculate() {
     thirdSeatCostRaw = thirdPlanPrice * thirdSeatUsers;
     const thirdSeatCost = applyDiscount(thirdSeatCostRaw, thirdSeatDiscPct);
     const thirdPlanOption = $('thirdSeatPlan').selectedOptions[0];
-    thirdPlanLabel = thirdPlanOption ? thirdPlanOption.textContent.split(' — ')[0] : '';
+    thirdPlanLabel = thirdPlanOption ? (thirdPlanOption.dataset.name || thirdPlanOption.textContent) : '';
 
     $('thirdTotalSeats').textContent      = thirdSeatUsers.toLocaleString();
     $('thirdMonthlySeatCost').textContent = fmt(thirdSeatCostRaw);
