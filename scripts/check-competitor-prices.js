@@ -123,7 +123,7 @@ function findPriceNear(text, planName, otherPlanNames) {
       const boundary = window.match(otherNameRe);
       if (boundary) window = window.slice(0, boundary.index);
     }
-    const priceMatch = window.match(/\$\s?([0-9][0-9,]*(?:\.[0-9]+)?)/);
+    const priceMatch = window.match(/\$\s?([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?)/);
     if (priceMatch) return priceMatch[1].replace(/,/g, '');
   }
   return undefined;
@@ -195,9 +195,10 @@ async function main() {
       continue;
     }
 
-    const allPlanNames = vendor.plans.map(p => p.name);
     for (const plan of vendor.plans) {
-      const otherPlanNames = allPlanNames.filter(n => n !== plan.name);
+      const otherPlanNames = vendor.plans
+        .filter(p => p.lineIndex !== plan.lineIndex)
+        .map(p => p.name);
       const official = findPriceNear(text, plan.name, otherPlanNames);
       if (official === undefined) {
         warnings.push(`${vendorKey}: could not confidently find a price for "${plan.name}" on ${vendor.url}, skipped.`);
