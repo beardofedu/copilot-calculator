@@ -1,0 +1,192 @@
+name: Branch Cleanup
+
+'on':
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete merged branches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Fetch repository info to determine default branch
+            const { data: repoData } = await github.rest.repos.get({ owner, repo });
+            const defaultBranch = repoData.default_branch || 'main';
+
+            // Branches that must never be deleted
+            const protectedBranches = new Set(['main', 'master', defaultBranch]);
+
+            console.log(`Default branch: ${defaultBranch}`);
+
+            // Map branchName -> most recently merged PR head SHA
+            const prHeadShaMap = new Map();
+            const candidateBranches = new Set();
+
+            // Helper to record candidate PR head branch
+            const recordPrBranch = (pr) => {
+              if (!pr || !pr.merged_at) return;
+              if (!pr.head || !pr.head.repo || !pr.base || !pr.base.repo) return;
+              if (pr.head.repo.full_name !== pr.base.repo.full_name) return;
+              if (pr.base.ref !== defaultBranch) return;
+
+              const branchName = pr.head.ref;
+              if (!protectedBranches.has(branchName)) {
+                candidateBranches.add(branchName);
+                if (pr.head.sha && !prHeadShaMap.has(branchName)) {
+                  prHeadShaMap.set(branchName, pr.head.sha);
+                }
+              }
+            };
+
+            // Check if triggered by PR close event
+            if (context.payload.pull_request) {
+              recordPrBranch(context.payload.pull_request);
+            }
+
+            // Scan closed merged PRs (up to 10 pages / 1,000 PRs) to identify merged branches
+            let pageCount = 0;
+            const prs = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner,
+                repo,
+                state: 'closed',
+                base: defaultBranch,
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100,
+              },
+              (response, done) => {
+                pageCount++;
+                if (pageCount >= 10) {
+                  done();
+                }
+                return response.data;
+              }
+            );
+
+            for (const pr of prs) {
+              recordPrBranch(pr);
+            }
+
+            console.log(`Evaluating ${candidateBranches.size} candidate branch(es) from merged pull requests...`);
+
+            // Inspect each candidate branch before deleting
+            let deletedCount = 0;
+            for (const branchName of candidateBranches) {
+              if (protectedBranches.has(branchName)) continue;
+
+              // Verify branch exists in repo
+              let branchData;
+              try {
+                const res = await github.rest.repos.getBranch({
+                  owner,
+                  repo,
+                  branch: branchName,
+                });
+                branchData = res.data;
+              } catch (err) {
+                if (err.status === 404) {
+                  console.log(`Branch '${branchName}' does not exist or was already deleted.`);
+                  continue;
+                }
+                console.log(`Error inspecting branch '${branchName}': ${err.message}`);
+                continue;
+              }
+
+              if (branchData.protected) {
+                console.log(`Skipping branch '${branchName}' (protected branch rule active)`);
+                continue;
+              }
+
+              // Verify branch has no open PRs
+              try {
+                const { data: openPrs } = await github.rest.pulls.list({
+                  owner,
+                  repo,
+                  state: 'open',
+                  head: `${owner}:${branchName}`,
+                  per_page: 1,
+                });
+
+                if (openPrs.length > 0) {
+                  console.log(`Skipping branch '${branchName}' (head of open PR #${openPrs[0].number})`);
+                  continue;
+                }
+              } catch (err) {
+                console.log(`Error checking open PRs for '${branchName}': ${err.message}`);
+                continue;
+              }
+
+              // Verify branch is merged into defaultBranch (either via matching PR head SHA or commit comparison)
+              let isMerged = false;
+              const currentSha = branchData.commit ? branchData.commit.sha : null;
+              const mergedPrSha = prHeadShaMap.get(branchName);
+
+              if (mergedPrSha && currentSha === mergedPrSha) {
+                isMerged = true;
+                console.log(`Branch '${branchName}' head commit matches merged PR head commit (${currentSha})`);
+              } else {
+                try {
+                  const { data: comparison } = await github.rest.repos.compareCommits({
+                    owner,
+                    repo,
+                    base: defaultBranch,
+                    head: branchName,
+                  });
+
+                  if (
+                    comparison.status === 'identical' ||
+                    comparison.status === 'behind' ||
+                    comparison.ahead_by === 0
+                  ) {
+                    isMerged = true;
+                    console.log(`Branch '${branchName}' is merged into ${defaultBranch} (status: ${comparison.status}, ahead_by: ${comparison.ahead_by})`);
+                  } else {
+                    console.log(`Skipping branch '${branchName}' (has ${comparison.ahead_by} unmerged commit(s) relative to ${defaultBranch})`);
+                  }
+                } catch (err) {
+                  console.log(`Could not compare branch '${branchName}': ${err.message}`);
+                  continue;
+                }
+              }
+
+              if (!isMerged) {
+                continue;
+              }
+
+              // Perform deletion
+              try {
+                await github.rest.git.deleteRef({
+                  owner,
+                  repo,
+                  ref: `heads/${branchName}`,
+                });
+                console.log(`Successfully deleted branch: '${branchName}'`);
+                deletedCount++;
+              } catch (err) {
+                console.log(`Failed to delete branch '${branchName}': ${err.message}`);
+              }
+            }
+
+            console.log(`Branch cleanup complete. Deleted ${deletedCount} branch(es).`);

@@ -18,6 +18,8 @@
       --accent-ant-light: #f59e0b;
       --accent-blue: #1f6feb;
       --accent-blue-light: #388bfd;
+      --accent-third: #8957e5;
+      --accent-third-light: #a371f7;
       --danger: #da3633;
       --radius: 8px;
     }
@@ -172,6 +174,16 @@
     }
     .top-disclaimer strong { color: #f0c040; }
 
+    .last-updated {
+      max-width: 1280px;
+      margin: 16px auto 0;
+      padding: 0 24px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+    .last-updated a { color: var(--accent-blue-light); }
+
     /* ── Layout ──────────────────────────────────────────── */
     .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
 
@@ -180,7 +192,25 @@
       grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
-    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    .grid-2.three-col { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 1300px) { .grid-2.three-col { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 900px) { .grid-2, .grid-2.three-col { grid-template-columns: 1fr; } }
+
+    /* ── Competitor picker ──────────────────────────────────── */
+    .competitor-picker {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .competitor-picker label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .competitor-picker select { padding: 6px 10px; font-size: 13px; min-width: 220px; }
+    .competitor-picker .hint { font-size: 11px; color: var(--muted); }
 
     /* ── Card ────────────────────────────────────────────── */
     .card {
@@ -208,6 +238,8 @@
     .gh-badge { background: rgba(35,134,54,.25); color: var(--accent-gh-light); }
     .ant-header { border-top: 3px solid var(--accent-ant); }
     .ant-badge { background: rgba(217,119,6,.25); color: var(--accent-ant-light); }
+    .third-header { border-top: 3px solid var(--accent-third); }
+    .third-badge { background: rgba(137,87,229,.25); color: var(--accent-third-light); }
 
     .card-body { padding: 18px; }
 
@@ -385,7 +417,9 @@
       grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
-    @media (max-width: 900px) { .results-grid { grid-template-columns: 1fr; } }
+    .results-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 1300px) { .results-grid.three-col { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 900px) { .results-grid, .results-grid.three-col { grid-template-columns: 1fr; } }
 
     .result-card {
       background: var(--surface);
@@ -403,6 +437,7 @@
     }
     .gh-result-header { background: rgba(35,134,54,.12); border-bottom: 1px solid rgba(35,134,54,.3); color: var(--accent-gh-light); }
     .ant-result-header { background: rgba(217,119,6,.12); border-bottom: 1px solid rgba(217,119,6,.3); color: var(--accent-ant-light); }
+    .third-result-header { background: rgba(137,87,229,.12); border-bottom: 1px solid rgba(137,87,229,.3); color: var(--accent-third-light); }
 
     .result-total {
       font-size: 28px;
@@ -458,6 +493,7 @@
     }
     .winner-gh { color: var(--accent-gh-light); }
     .winner-ant { color: var(--accent-ant-light); }
+    .winner-third { color: var(--accent-third-light); }
     .winner-tie { color: #79c0ff; }
     .savings-pill {
       font-size: 12px;
@@ -467,6 +503,7 @@
     }
     .savings-gh { background: rgba(35,134,54,.2); color: var(--accent-gh-light); }
     .savings-ant { background: rgba(217,119,6,.2); color: var(--accent-ant-light); }
+    .savings-third { background: rgba(137,87,229,.2); color: var(--accent-third-light); }
 
     .comparison-table { width: 100%; border-collapse: collapse; }
     .comparison-table td, .comparison-table th {
@@ -604,6 +641,19 @@
       gap: 8px;
     }
     .ant-seat-summary .stat-val { color: var(--accent-ant-light); }
+
+    /* ── Third competitor seat summary ───────────────────── */
+    .third-seat-summary {
+      background: rgba(137,87,229,.08);
+      border: 1px solid rgba(137,87,229,.25);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .third-seat-summary .stat-val { color: var(--accent-third-light); }
   </style>
 </head>
 <body>
@@ -633,10 +683,23 @@
   and <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener" style="color:#f0c040">Anthropic pricing</a> before making purchasing decisions.
 </div>
 
+<div class="last-updated">
+  Last updated: September 7, 2026 · <a href="https://github.com/beardofedu/copilot-calculator/commits" target="_blank" rel="noopener">View commit history</a>
+</div>
+
 <div class="container">
 
+  <!-- ── Competitor Picker ────────────────────────────────────── -->
+  <div class="competitor-picker">
+    <label for="thirdCompetitorSelect">Add a third competitor</label>
+    <select id="thirdCompetitorSelect" onchange="onThirdCompetitorChange()">
+      <option value="">None</option>
+    </select>
+    <span class="hint">Compare GitHub Copilot and Anthropic against another AI coding assistant</span>
+  </div>
+
   <!-- ── Vendor Cards ──────────────────────────────────────── -->
-  <div class="grid-2">
+  <div class="grid-2" id="vendorGrid">
 
     <!-- ════════════════ GitHub Copilot ════════════════ -->
     <div class="card">
@@ -651,10 +714,6 @@
 
         <div class="info-banner">
           <strong>1 AI credit = $0.01 USD.</strong> Each seat tier includes a monthly AI credit pool shared across all users. Token usage beyond the pool is billed at the discounted overage rate. Code completions are <strong>unlimited</strong> and never consume credits.
-        </div>
-
-        <div class="info-banner" style="background:rgba(210,153,34,.1);border-color:rgba(210,153,34,.35);color:#e3b341;">
-          ⚠️ <strong>Promotional credits not included:</strong> This calculator does not account for the <a href="https://github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing/" target="_blank" rel="noopener" style="color:#e3b341;">additional promotional AI credits</a> currently available to Copilot Business and Enterprise customers through August 2026. Your actual overage costs may be lower during that period.
         </div>
 
         <!-- ── Licenses ── -->
@@ -730,7 +789,7 @@
 
         <!-- ── Vendor Discount ── -->
         <div class="section-title">Vendor Discount</div>
-        <div class="toggle-row" onclick="toggleDiscount(event, 'gh')">
+        <div class="toggle-row" onclick="toggleDiscount('gh', event)">
           <input type="checkbox" id="ghDiscountEnabled" />
           <div>
             <div class="toggle-label">Apply GitHub Copilot Discount</div>
@@ -780,7 +839,10 @@
             <select id="antSeatPlan" onchange="calculate()">
               <option value="0">Free — $0/user/month</option>
               <option value="20" selected>Pro — $20/user/month</option>
-              <option value="30">Team — $30/user/month</option>
+              <option value="100">Max 5x — $100/user/month</option>
+              <option value="200">Max 20x — $200/user/month</option>
+              <option value="25">Team Standard — $25/user/month</option>
+              <option value="125">Team Premium — $125/user/month</option>
             </select>
           </div>
         </div>
@@ -801,18 +863,18 @@
           </div>
           <div class="seat-stat">
             <div class="stat-val" id="antIncludedCreditsDisplay">—</div>
-            <div class="stat-lbl">Included Credits</div>
+            <div class="stat-lbl">Purchased API Credits</div>
           </div>
         </div>
 
-        <!-- ── Included Credits ── -->
-        <div class="section-title" style="margin-top:4px">Included Credits <i class="tt-icon" onmouseenter="showAntCreditsTT(this)" onmouseleave="scheduleTTHide()">ⓘ</i></div>
+        <!-- ── Purchased API Credits ── -->
+        <div class="section-title" style="margin-top:4px">Purchased API Credits <i class="tt-icon" onmouseenter="showAntCreditsTT(this)" onmouseleave="scheduleTTHide()">ⓘ</i></div>
         <div class="info-banner" style="margin-bottom:10px">
-          Anthropic includes API credits with paid plans but doesn't publicly disclose the amount. Enter the credits included with your subscription.
+          Claude.ai subscription usage is separate from Anthropic API billing. If you have purchased Anthropic usage credits for API overage, enter their dollar value below; otherwise leave it at <strong>$0</strong>.
         </div>
         <div class="inline-2" style="align-items:flex-end">
           <div class="field">
-            <label id="antCreditsLabel">Credits per user / month</label>
+            <label id="antCreditsLabel">Purchased API usage credits ($)</label>
             <input type="number" id="antIncludedCredits" value="0" min="0" oninput="calculate()" placeholder="0" />
           </div>
           <div class="field" style="display:flex;align-items:center;padding-bottom:6px">
@@ -820,7 +882,7 @@
               <input type="checkbox" id="antCreditsWholeAccount" />
               <div>
                 <div class="toggle-label">Whole account total</div>
-                <div class="toggle-desc">Use as total credits for the account instead of per user</div>
+                <div class="toggle-desc">Use as total purchased credits instead of per user</div>
               </div>
             </div>
           </div>
@@ -864,7 +926,7 @@
 
         <!-- ── Vendor Discount ── -->
         <div class="section-title">Vendor Discount</div>
-        <div class="toggle-row" onclick="toggleDiscount(event, 'ant')">
+        <div class="toggle-row" onclick="toggleDiscount('ant', event)">
           <input type="checkbox" id="antDiscountEnabled" />
           <div>
             <div class="toggle-label">Apply Anthropic Discount</div>
@@ -884,13 +946,85 @@
 
       </div>
     </div>
+
+    <!-- ════════════════ Third Competitor (optional) ════════════════ -->
+    <div class="card hidden" id="thirdCard">
+      <div class="card-header third-header">
+        <span id="thirdIcon">🧩</span>
+        <span id="thirdCardName">Competitor</span>
+        <span class="badge third-badge" id="thirdBadge">Seat + API Usage</span>
+      </div>
+      <div class="card-body">
+
+        <div class="info-banner" id="thirdInfoBanner"></div>
+
+        <!-- ── Licenses & Seats ── -->
+        <div class="section-title">Licenses &amp; Seats</div>
+        <div class="inline-2">
+          <div class="field">
+            <label>Number of Users</label>
+            <input type="number" id="thirdSeatUsers" value="10" min="0" oninput="calculate()" />
+          </div>
+          <div class="field">
+            <label>Plan</label>
+            <select id="thirdSeatPlan" onchange="calculate()"></select>
+          </div>
+        </div>
+
+        <!-- Seat summary bar -->
+        <div class="third-seat-summary">
+          <div class="seat-stat">
+            <div class="stat-val" id="thirdTotalSeats">10</div>
+            <div class="stat-lbl">Total Seats</div>
+          </div>
+          <div class="seat-stat">
+            <div class="stat-val" id="thirdMonthlySeatCost">$—</div>
+            <div class="stat-lbl">Monthly Seat Cost</div>
+          </div>
+          <div class="seat-stat">
+            <div class="stat-val" id="thirdPlanName">—</div>
+            <div class="stat-lbl">Active Plan</div>
+          </div>
+        </div>
+
+        <!-- ── Optional API Token Usage ── -->
+        <div id="thirdModelSection">
+          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>API Token Usage <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></span>
+          </div>
+          <div id="thirdModelRowsContainer"></div>
+          <button class="add-model-btn" onclick="addThirdModelRow()">＋ Add another model</button>
+        </div>
+
+        <!-- ── Vendor Discount ── -->
+        <div class="section-title">Vendor Discount</div>
+        <div class="toggle-row" onclick="toggleDiscount('third', event)">
+          <input type="checkbox" id="thirdDiscountEnabled" />
+          <div>
+            <div class="toggle-label">Apply Discount</div>
+            <div class="toggle-desc">Reduces both seat cost and token rates</div>
+          </div>
+        </div>
+        <div class="discount-inputs hidden" id="thirdDiscountInputs">
+          <div class="field pct-field">
+            <label>Seat Cost Discount</label>
+            <input type="number" id="thirdSeatDiscount" value="10" min="0" max="100" oninput="calculate()" />
+          </div>
+          <div class="field pct-field">
+            <label>Token Rate Discount</label>
+            <input type="number" id="thirdTokenDiscount" value="10" min="0" max="100" oninput="calculate()" />
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <!-- ── Results ─────────────────────────────────────────────── -->
   <div class="results-section">
     <div class="section-title" style="margin-top:0">Monthly Cost Breakdown</div>
 
-    <div class="results-grid">
+    <div class="results-grid" id="resultsGrid">
       <div class="result-card">
         <div class="result-header gh-result-header">
           <span>GitHub Copilot</span>
@@ -907,6 +1041,14 @@
         <div class="result-total" id="antTotal">$—</div>
         <div class="result-breakdown" id="antBreakdown"></div>
       </div>
+      <div class="result-card hidden" id="thirdResultCard">
+        <div class="result-header third-result-header">
+          <span id="thirdResultName">Competitor</span>
+          <span id="thirdModelTag" style="font-size:12px;font-weight:400;color:var(--muted)"></span>
+        </div>
+        <div class="result-total" id="thirdTotal">$—</div>
+        <div class="result-breakdown" id="thirdBreakdown"></div>
+      </div>
     </div>
 
     <div class="summary-card">
@@ -918,6 +1060,7 @@
             <th>Cost Component</th>
             <th>GitHub Copilot</th>
             <th>Anthropic API</th>
+            <th class="hidden" id="thirdColHeader">Competitor</th>
           </tr>
         </thead>
         <tbody id="comparisonRows"></tbody>
@@ -949,6 +1092,12 @@ const COPILOT_MODELS = {
     { id: 'gpt54nano',      label: 'GPT-5.4 nano',            input: 0.20,  cachedInput: 0.02,  output: 1.25  },
     { id: 'gpt55',          label: 'GPT-5.5 (≤272K)',          input: 5.00,  cachedInput: 0.50,  output: 30.00 },
     { id: 'gpt55lc',        label: 'GPT-5.5 (>272K)',          input: 10.00, cachedInput: 1.00,  output: 45.00 },
+    { id: 'gpt56luna',      label: 'GPT-5.6 Luna (≤200K)',     input: 0.20,  cachedInput: 0.02,  cacheWrite: 0.25,  output: 1.20  },
+    { id: 'gpt56lunalc',    label: 'GPT-5.6 Luna (>200K)',     input: 0.40,  cachedInput: 0.04,  cacheWrite: 0.50,  output: 1.80  },
+    { id: 'gpt56sol',       label: 'GPT-5.6 Sol (≤272K)',      input: 4.00,  cachedInput: 0.40,  cacheWrite: 5.00,  output: 20.00 },
+    { id: 'gpt56sollc',     label: 'GPT-5.6 Sol (>272K)',      input: 8.00,  cachedInput: 0.80,  cacheWrite: 10.00, output: 30.00 },
+    { id: 'gpt56terra',     label: 'GPT-5.6 Terra (≤272K)',    input: 2.00,  cachedInput: 0.20,  cacheWrite: 2.50,  output: 12.00 },
+    { id: 'gpt56terralc',   label: 'GPT-5.6 Terra (>272K)',    input: 4.00,  cachedInput: 0.40,  cacheWrite: 5.00,  output: 18.00 },
   ],
   anthropic: [
     { id: 'haiku45',   label: 'Claude Haiku 4.5',  input: 1.00,  cachedInput: 0.10, cacheWrite: 1.25,  output: 5.00  },
@@ -959,6 +1108,9 @@ const COPILOT_MODELS = {
     { id: 'opus46',    label: 'Claude Opus 4.6',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
     { id: 'opus47',    label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
     { id: 'opus48',    label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+    { id: 'opus48fast',label: 'Claude Opus 4.8 (fast mode) ⚠ Preview', input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+    { id: 'opus5',     label: 'Claude Opus 5',     input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+    { id: 'sonnet5',   label: 'Claude Sonnet 5 ⚠ Promo through Aug 31, 2026', input: 2.00, cachedInput: 0.20, cacheWrite: 2.50, output: 10.00 },
     { id: 'fable5',    label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
   ],
   google: [
@@ -967,12 +1119,20 @@ const COPILOT_MODELS = {
     { id: 'gemini31pro',   label: 'Gemini 3.1 Pro (≤200K) ⚠', input: 2.00, cachedInput: 0.20,  output: 12.00 },
     { id: 'gemini31prolc', label: 'Gemini 3.1 Pro (>200K) ⚠', input: 4.00, cachedInput: 0.40,  output: 18.00 },
     { id: 'gemini35flash', label: 'Gemini 3.5 Flash',          input: 1.50, cachedInput: 0.15,  output: 9.00  },
+    { id: 'gemini36flash', label: 'Gemini 3.6 Flash',          input: 0.75, cachedInput: 0.075, output: 3.75  },
   ],
   github: [
     { id: 'raptormini',   label: 'Raptor mini ⚠ Preview', input: 0.25, cachedInput: 0.025, output: 2.00 },
   ],
   microsoft: [
     { id: 'maicodeflash', label: 'MAI-Code-1-Flash',       input: 0.75, cachedInput: 0.075, output: 4.50 },
+  ],
+  xai: [
+    { id: 'grok45',       label: 'Grok 4.5 (≤200K)',         input: 2.00, cachedInput: 0.50, output: 6.00 },
+    { id: 'grok45lc',     label: 'Grok 4.5 (>200K)',          input: 4.00, cachedInput: 1.00, output: 12.00 },
+  ],
+  moonshot: [
+    { id: 'kimi27',       label: 'Kimi K2.7 Code',            input: 0.95, cachedInput: 0.19, output: 4.00 },
   ],
 };
 
@@ -985,6 +1145,9 @@ const ANTHROPIC_MODELS = {
   'opus-4.6':   { label: 'Claude Opus 4.6',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
   'opus-4.7':   { label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
   'opus-4.8':   { label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+  'opus-4.8-fast': { label: 'Claude Opus 4.8 (fast mode)', input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+  'opus-5':     { label: 'Claude Opus 5',     input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25, output: 25.00 },
+  'sonnet-5':   { label: 'Claude Sonnet 5',   input: 2.00,  cachedInput: 0.20, cacheWrite: 2.50, output: 10.00 },
   'fable-5':    { label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
 };
 
@@ -1000,6 +1163,12 @@ const GH_TO_ANT_MAP = {
   gpt54nano:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
   gpt55:         { key: 'opus-4.8',   how: 'tier match (powerful)' },
   gpt55lc:       { key: 'opus-4.8',   how: 'tier match (powerful, long ctx)' },
+  gpt56luna:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gpt56lunalc:   { key: 'haiku-4.5',  how: 'tier match (lightweight, long ctx)' },
+  gpt56sol:      { key: 'opus-5',     how: 'tier match (powerful)' },
+  gpt56sollc:    { key: 'opus-5',     how: 'tier match (powerful, long ctx)' },
+  gpt56terra:    { key: 'sonnet-5',   how: 'tier match (versatile)' },
+  gpt56terralc:  { key: 'sonnet-5',   how: 'tier match (versatile, long ctx)' },
   // Anthropic — direct equivalents
   haiku45:       { key: 'haiku-4.5',  how: 'direct equivalent' },
   sonnet4:       { key: 'sonnet-4',   how: 'direct equivalent' },
@@ -1009,6 +1178,9 @@ const GH_TO_ANT_MAP = {
   opus46:        { key: 'opus-4.6',   how: 'direct equivalent' },
   opus47:        { key: 'opus-4.7',   how: 'direct equivalent' },
   opus48:        { key: 'opus-4.8',   how: 'direct equivalent' },
+  opus48fast:    { key: 'opus-4.8-fast', how: 'direct equivalent' },
+  opus5:         { key: 'opus-5',    how: 'direct equivalent' },
+  sonnet5:       { key: 'sonnet-5',  how: 'direct equivalent' },
   fable5:        { key: 'fable-5',    how: 'direct equivalent' },
   // Google
   gemini25pro:   { key: 'sonnet-4.6', how: 'tier match (powerful)' },
@@ -1016,9 +1188,67 @@ const GH_TO_ANT_MAP = {
   gemini31pro:   { key: 'opus-4.7',   how: 'tier match (powerful)' },
   gemini31prolc: { key: 'opus-4.7',   how: 'tier match (powerful, long ctx)' },
   gemini35flash: { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gemini36flash: { key: 'haiku-4.5', how: 'tier match (versatile)' },
   // GitHub / Microsoft
   raptormini:    { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
   maicodeflash:  { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  grok45:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
+  grok45lc:      { key: 'sonnet-4.6', how: 'tier match (versatile, long ctx)' },
+  kimi27:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
+};
+
+// ── Third-party competitors ──────────────────────────────────────────────────
+// Seat-based pricing for a selectable "third competitor" column. Optional API
+// token usage (where the vendor exposes per-token API pricing) reuses the
+// COPILOT_MODELS provider tables above via `modelsProvider`.
+const THIRD_PARTY_COMPETITORS = {
+  cursor: {
+    name: 'Cursor',
+    icon: '⌨️',
+    infoBanner: 'Cursor is an AI-first code editor with a <strong>seat-based pricing model</strong> that includes a monthly usage credit pool. Additional usage beyond the plan\'s pool is billed as overage.',
+    modelsProvider: null,
+    plans: [
+      { value: '0',   name: 'Hobby',          label: 'Hobby — $0/user/month' },
+      { value: '20',  name: 'Pro',            label: 'Pro — $20/user/month' },
+      { value: '40',  name: 'Teams Standard', label: 'Teams Standard — $40/user/month', selected: true },
+      { value: '120', name: 'Teams Premium',  label: 'Teams Premium — $120/user/month' },
+    ],
+    source: { text: 'Cursor pricing', url: 'https://cursor.com/pricing' },
+  },
+  amazonq: {
+    name: 'Amazon Q Developer',
+    icon: '🅰️',
+    infoBanner: 'Amazon Q Developer uses a <strong>seat-based pricing model</strong>. The Pro tier includes higher usage limits than the Free tier; overage for large code transformations is billed separately.',
+    modelsProvider: null,
+    plans: [
+      { value: '0',  name: 'Free', label: 'Free — $0/user/month' },
+      { value: '19', name: 'Pro',  label: 'Pro — $19/user/month', selected: true },
+    ],
+    source: { text: 'Amazon Q Developer pricing', url: 'https://aws.amazon.com/q/developer/pricing/' },
+  },
+  gemini: {
+    name: 'Google Gemini Code Assist',
+    icon: '✨',
+    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong> (annual commitment pricing shown). Optional direct Gemini API usage can be added below using standard per-token rates.',
+    modelsProvider: 'google',
+    plans: [
+      { value: '19', name: 'Standard',   label: 'Standard — $19/user/month', selected: true },
+      { value: '45', name: 'Enterprise', label: 'Enterprise — $45/user/month' },
+    ],
+    source: { text: 'Gemini Code Assist pricing', url: 'https://cloud.google.com/products/gemini/pricing' },
+  },
+  chatgpt: {
+    name: 'OpenAI ChatGPT',
+    icon: '🤖',
+    infoBanner: 'ChatGPT Business/Enterprise uses a <strong>seat-based pricing model</strong>. Optional direct OpenAI API usage can be added below using standard per-token rates.',
+    modelsProvider: 'openai',
+    plans: [
+      { value: '25',  name: 'Business Standard',    label: 'Business Standard — $25/user/month', selected: true },
+      { value: '125', name: 'Business Premium',     label: 'Business Premium — $125/user/month' },
+      { value: '60',  name: 'Enterprise (est.)',    label: 'Enterprise (est.) — $60/user/month' },
+    ],
+    source: { text: 'OpenAI ChatGPT pricing', url: 'https://openai.com/chatgpt/pricing/' },
+  },
 };
 
 // ── Row ID counters ──────────────────────────────────────────────────────────
@@ -1026,6 +1256,7 @@ const GH_TO_ANT_MAP = {
 let ghRowIds      = [];
 let ghCreditIds   = [];
 let antRowIds     = [];
+let thirdRowIds   = [];
 let nextId        = 1;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1046,7 +1277,9 @@ function providerOptionsHTML() {
     <option value="anthropic">Anthropic</option>
     <option value="google">Google</option>
     <option value="github">Fine-tuned (GitHub)</option>
-    <option value="microsoft">Microsoft</option>`;
+    <option value="microsoft">Microsoft</option>
+    <option value="xai">xAI</option>
+    <option value="moonshot">Moonshot AI</option>`;
 }
 
 function modelOptionsHTML(provider) {
@@ -1162,6 +1395,40 @@ function buildAntModelRow(id, defaultModel = 'sonnet-4.5') {
   return el;
 }
 
+function buildThirdModelRow(id, provider) {
+  const el = document.createElement('div');
+  el.className = 'model-row';
+  el.id = 'thirdrow-' + id;
+  el.innerHTML = `
+    <div class="model-row-header">
+      <select style="flex:1" data-field="model" data-provider="${provider}" onchange="calculate()">
+        ${modelOptionsHTML(provider)}
+      </select>
+    <i class="tt-icon" onmouseenter="showModelTT(this,'third',${id})" onmouseleave="scheduleTTHide()" title="View pricing details">ⓘ</i>
+    <button class="remove-btn" onclick="removeThirdModelRow(${id})" title="Remove row">×</button>
+  </div>
+    <div class="model-row-inputs">
+      <div class="field">
+        <label>Input Tokens (M)</label>
+        <input type="number" data-field="inputM" value="5" min="0" step="0.1" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Cached Input (M)</label>
+        <input type="number" data-field="cachedM" value="1" min="0" step="0.1" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Cache Write (M)</label>
+        <input type="number" data-field="cacheWriteM" value="0.5" min="0" step="0.1" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Output Tokens (M)</label>
+        <input type="number" data-field="outputM" value="2" min="0" step="0.1" oninput="calculate()" />
+      </div>
+    </div>
+    <div class="model-row-cost" id="thirdrow-${id}-cost">—</div>`;
+  return el;
+}
+
 // ── Row Management ────────────────────────────────────────────────────────────
 
 function addGhModelRow() {
@@ -1210,6 +1477,32 @@ function removeAntModelRow(id) {
   calculate();
 }
 
+function seedThirdModelRow(provider) {
+  const id = nextId++;
+  thirdRowIds.push(id);
+  $('thirdModelRowsContainer').appendChild(buildThirdModelRow(id, provider));
+}
+
+function addThirdModelRow() {
+  const competitorKey = $('thirdCompetitorSelect').value;
+  const competitor = THIRD_PARTY_COMPETITORS[competitorKey];
+  if (!competitor || !competitor.modelsProvider) return;
+  seedThirdModelRow(competitor.modelsProvider);
+  calculate();
+}
+
+function removeThirdModelRow(id) {
+  thirdRowIds = thirdRowIds.filter(i => i !== id);
+  const el = $('thirdrow-' + id);
+  if (el) el.remove();
+  calculate();
+}
+
+function clearThirdModelRows() {
+  thirdRowIds = [];
+  $('thirdModelRowsContainer').innerHTML = '';
+}
+
 // ── Provider Change Handlers ──────────────────────────────────────────────────
 
 function onGhProviderChange(id) {
@@ -1232,20 +1525,64 @@ function onGhCreditProviderChange(id) {
 
 // ── Toggle Helpers ────────────────────────────────────────────────────────────
 
-// Toggles the checkbox's checked state, unless the click already landed on
-// the checkbox itself (which the browser has already toggled natively) —
-// avoids a double-toggle when a wrapping row also has a click handler.
-function toggleCheckbox(e, cb) {
-  if (!e || e.target !== cb) {
-    cb.checked = !cb.checked;
-  }
+const VENDOR_KEYS = ['gh', 'ant', 'third'];
+
+function toggleDiscount(vendor, event) {
+  if (!VENDOR_KEYS.includes(vendor)) return;
+  const cb  = $(vendor + 'DiscountEnabled');
+  const div = $(vendor + 'DiscountInputs');
+  if (event?.target !== cb) cb.checked = !cb.checked;
+  div.classList.toggle('hidden', !cb.checked);
+  calculate();
 }
 
-function toggleDiscount(e, vendor) {
-  const cb  = $(vendor === 'gh' ? 'ghDiscountEnabled' : 'antDiscountEnabled');
-  const div = $(vendor === 'gh' ? 'ghDiscountInputs'  : 'antDiscountInputs');
-  toggleCheckbox(e, cb);
-  div.classList.toggle('hidden', !cb.checked);
+// ── Third Competitor Selection ───────────────────────────────────────────────
+
+function populateThirdCompetitorOptions() {
+  const sel = $('thirdCompetitorSelect');
+  Object.entries(THIRD_PARTY_COMPETITORS).forEach(([key, c]) => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+}
+
+function onThirdCompetitorChange() {
+  const key = $('thirdCompetitorSelect').value;
+  const card = $('thirdCard');
+  const competitor = THIRD_PARTY_COMPETITORS[key];
+
+  $('vendorGrid').classList.toggle('three-col', !!competitor);
+  $('resultsGrid').classList.toggle('three-col', !!competitor);
+  $('thirdResultCard').classList.toggle('hidden', !competitor);
+  $('thirdColHeader').classList.toggle('hidden', !competitor);
+  card.classList.toggle('hidden', !competitor);
+
+  clearThirdModelRows();
+
+  if (!competitor) {
+    calculate();
+    return;
+  }
+
+  $('thirdIcon').textContent      = competitor.icon;
+  $('thirdCardName').textContent  = competitor.name;
+  $('thirdBadge').textContent     = competitor.modelsProvider ? 'Seat + API Usage' : 'Seat-based only';
+  $('thirdResultName').textContent = competitor.name;
+  $('thirdColHeader').textContent  = competitor.name;
+  $('thirdInfoBanner').innerHTML   = competitor.infoBanner;
+
+  const planSel = $('thirdSeatPlan');
+  planSel.innerHTML = competitor.plans.map(p =>
+    `<option value="${p.value}" data-name="${p.name}" ${p.selected ? 'selected' : ''}>${p.label}</option>`
+  ).join('');
+
+  $('thirdModelSection').classList.toggle('hidden', !competitor.modelsProvider);
+  if (competitor.modelsProvider) {
+    seedThirdModelRow(competitor.modelsProvider);
+  }
+
   calculate();
 }
 
@@ -1253,6 +1590,7 @@ function toggleDiscount(e, vendor) {
 
 const GH_DOCS_URL = 'https://docs.github.com/en/enterprise-cloud@latest/copilot/reference/copilot-billing/models-and-pricing';
 const ANT_PRICING_URL = 'https://claude.com/pricing';
+const ANT_API_PRICING_URL = 'https://platform.claude.com/docs/en/docs/about-claude/pricing';
 
 const STATIC_TOOLTIPS = {
   'gh-business': {
@@ -1275,7 +1613,10 @@ const STATIC_TOOLTIPS = {
 const ANT_PLAN_DETAILS = {
   '0':  { name: 'Free',       rows: [['Seat cost','$0 / user / month'],['Usage','Limited (throttled at caps)'],['Models','Claude Haiku & Sonnet'],['API access','Not included']] },
   '20': { name: 'Pro',        rows: [['Seat cost','$20 / user / month'],['Usage','5× more than Free plan'],['Models','All Claude models'],['API access','Via claude.ai (not direct API)']] },
-  '30': { name: 'Team',       rows: [['Seat cost','$30 / user / month'],['Min seats','5 users'],['Usage','Higher than Pro'],['Features','Admin controls, collaboration'],['API access','Via claude.ai']] },
+  '100': { name: 'Max 5x',    rows: [['Seat cost','$100 / user / month'],['Usage','5× more than Pro'],['Models','All Claude models'],['API access','Via claude.ai (not direct API)']] },
+  '200': { name: 'Max 20x',   rows: [['Seat cost','$200 / user / month'],['Usage','20× more than Pro'],['Models','All Claude models'],['API access','Via claude.ai (not direct API)']] },
+  '25': { name: 'Team Standard', rows: [['Seat cost','$25 / user / month'],['Minimum seats','2 users'],['Usage','More than Pro'],['Features','Admin controls, collaboration'],['API access','Via claude.ai (not direct API)']] },
+  '125': { name: 'Team Premium', rows: [['Seat cost','$125 / user / month'],['Minimum seats','2 users'],['Usage','5× more than Team Standard'],['Features','Admin controls, collaboration'],['API access','Via claude.ai (not direct API)']] },
 };
 
 let ttHideTimer = null;
@@ -1322,13 +1663,9 @@ function showTT(triggerEl, key) {
 function showAntCreditsTT(triggerEl) {
   clearTimeout(ttHideTimer);
   TT.innerHTML = `
-    <div class="tt-title">Estimated Plan Credit Allocations</div>
-    <div class="tt-row"><span class="tt-lbl">Team Standard</span><span class="tt-val">~55,000 tokens / session</span></div>
-    <div class="tt-row"><span class="tt-lbl">Team Premium</span><span class="tt-val">~275,000 tokens / session</span></div>
-    <div class="tt-row"><span class="tt-lbl">Max 5x</span><span class="tt-val">~220,000 tokens / session</span></div>
-    <div class="tt-row"><span class="tt-lbl">Max 20x</span><span class="tt-val">~880,000 tokens / session</span></div>
-    <div class="tt-note">⚠ These are community-derived estimates based on observed usage patterns and token multipliers — <strong>not officially confirmed by Anthropic</strong>. Provided for reference only and should not be used as the basis for vendor selection.</div>
-    <div class="tt-source">📖 <a href="https://lord.technology/2026/03/28/claude-team-premium-vs-max-plans-usage-limits-pricing-and-which-to-choose.html" target="_blank" rel="noopener">lord.technology — Claude Team &amp; Max plan analysis</a></div>`;
+    <div class="tt-title">Anthropic API usage credits</div>
+    <div class="tt-note">Claude.ai plans do not include a fixed API-token credit pool. Optional usage credits are purchased separately and are billed at standard API rates.</div>
+    <div class="tt-source">📖 <a href="https://support.claude.com/en/articles/12429409-manage-usage-credits-for-paid-claude-plans" target="_blank" rel="noopener">Claude Help Center — Manage usage credits</a></div>`;
   TT.classList.add('tt-visible');
   positionTT(triggerEl);
 }
@@ -1359,13 +1696,23 @@ function showModelTT(triggerEl, vendor, rowId) {
     model = COPILOT_MODELS[provider].find(m => m.id === modelId);
     sourceText = 'GitHub Copilot billing docs';
     sourceUrl  = GH_DOCS_URL;
+  } else if (vendor === 'third') {
+    const rowEl = $('thirdrow-' + rowId);
+    if (!rowEl) return;
+    const modelSel = rowEl.querySelector('[data-field="model"]');
+    const provider = modelSel.dataset.provider;
+    model = COPILOT_MODELS[provider].find(m => m.id === modelSel.value);
+    const thirdKey = $('thirdCompetitorSelect').value;
+    const competitor = THIRD_PARTY_COMPETITORS[thirdKey];
+    sourceText = competitor ? competitor.source.text : 'Pricing source';
+    sourceUrl  = competitor ? competitor.source.url  : GH_DOCS_URL;
   } else {
     const rowEl = $('antrow-' + rowId);
     if (!rowEl) return;
     const modelKey = rowEl.querySelector('[data-field="model"]').value;
     model = ANTHROPIC_MODELS[modelKey];
     sourceText = 'Anthropic pricing';
-    sourceUrl  = ANT_PRICING_URL;
+    sourceUrl  = ANT_API_PRICING_URL;
   }
   if (!model) return;
 
@@ -1388,26 +1735,26 @@ function scheduleTTHide() {
 TT.addEventListener('mouseenter', () => clearTimeout(ttHideTimer));
 TT.addEventListener('mouseleave', scheduleTTHide);
 
-function toggleGhDirectCredits(e) {
+function toggleGhDirectCredits(event) {
   const cb  = $('ghDirectCreditsEnabled');
   const div = $('ghDirectCreditsSection');
-  toggleCheckbox(e, cb);
+  if (event?.target !== cb) cb.checked = !cb.checked;
   div.classList.toggle('hidden', !cb.checked);
   calculate();
 }
 
-function toggleAntMirror(e) {
+function toggleAntMirror(event) {
   const cb = $('antMirrorEnabled');
-  toggleCheckbox(e, cb);
+  if (event?.target !== cb) cb.checked = !cb.checked;
   $('antMirrorDisclaimer').classList.toggle('hidden', !cb.checked);
   $('antMirroredContainer').classList.toggle('hidden', !cb.checked);
   $('antManualRows').classList.toggle('hidden', cb.checked);
   calculate();
 }
 
-function toggleAntCreditsMode(e) {
+function toggleAntCreditsMode(event) {
   const cb = $('antCreditsWholeAccount');
-  toggleCheckbox(e, cb);
+  if (event?.target !== cb) cb.checked = !cb.checked;
   $('antCreditsLabel').textContent = cb.checked
     ? 'Total account credits / month'
     : 'Credits per user / month';
@@ -1453,6 +1800,22 @@ function readAntModelRows() {
     const cacheWriteM = parseFloat(el.querySelector('[data-field="cacheWriteM"]').value) || 0;
     const outputM     = parseFloat(el.querySelector('[data-field="outputM"]').value)     || 0;
     const model       = ANTHROPIC_MODELS[modelKey];
+    return { id, model, inputM, cachedM, cacheWriteM, outputM };
+  }).filter(Boolean);
+}
+
+function readThirdModelRows() {
+  return thirdRowIds.map(id => {
+    const el = $('thirdrow-' + id);
+    if (!el) return null;
+    const modelSel    = el.querySelector('[data-field="model"]');
+    const provider    = modelSel.dataset.provider;
+    const inputM      = parseFloat(el.querySelector('[data-field="inputM"]').value)      || 0;
+    const cachedM     = parseFloat(el.querySelector('[data-field="cachedM"]').value)     || 0;
+    const cacheWriteM = parseFloat(el.querySelector('[data-field="cacheWriteM"]').value) || 0;
+    const outputM     = parseFloat(el.querySelector('[data-field="outputM"]').value)     || 0;
+    const models      = COPILOT_MODELS[provider] || [];
+    const model       = models.find(m => m.id === modelSel.value) || models[0];
     return { id, model, inputM, cachedM, cacheWriteM, outputM };
   }).filter(Boolean);
 }
@@ -1575,19 +1938,18 @@ function calculate() {
   const antSeatCostRaw = antPlanPrice * antSeatUsers;
   const antSeatCost    = applyDiscount(antSeatCostRaw, antSeatDiscPct);
 
-  // ── Included credits ───────────────────────────────────────
+  // ── Purchased API usage credits ────────────────────────────
   const antRawCredits        = Math.max(0, parseFloat($('antIncludedCredits').value) || 0);
   const antCreditsWholeAcct  = $('antCreditsWholeAccount').checked;
-  const antIncludedCreditTotal = antCreditsWholeAcct ? antRawCredits : antRawCredits * antSeatUsers;
-  const antIncludedCreditsValue = antIncludedCreditTotal * 0.01;
+  const antPurchasedCreditValue = antCreditsWholeAcct ? antRawCredits : antRawCredits * antSeatUsers;
 
   // Update Anthropic seat summary
-  const antPlanNames = { '0': 'Free', '20': 'Pro', '30': 'Team' };
+  const antPlanNames = { '0': 'Free', '20': 'Pro', '100': 'Max 5x', '200': 'Max 20x', '25': 'Team Standard', '125': 'Team Premium' };
   $('antTotalSeats').textContent      = antSeatUsers.toLocaleString();
   $('antMonthlySeatCost').textContent = fmt(antSeatCostRaw);
   $('antPlanName').textContent        = antPlanNames[String(antPlanPrice)] || 'Pro';
-  $('antIncludedCreditsDisplay').textContent = antIncludedCreditTotal > 0
-    ? `${fmtCred(antIncludedCreditTotal)}`
+  $('antIncludedCreditsDisplay').textContent = antPurchasedCreditValue > 0
+    ? fmt(antPurchasedCreditValue)
     : '—';
 
   const antMirrorOn = $('antMirrorEnabled').checked;
@@ -1702,8 +2064,8 @@ function calculate() {
     });
   }
 
-  const antApiOverage     = Math.max(0, antTokenTotal - antIncludedCreditsValue);
-  const antCreditOffset   = Math.min(antTokenTotal, antIncludedCreditsValue);
+  const antApiOverage     = Math.max(0, antTokenTotal - antPurchasedCreditValue);
+  const antCreditOffset   = Math.min(antTokenTotal, antPurchasedCreditValue);
   const antTotal          = antSeatCost + antApiOverage;
 
   $('antModelTag').textContent = antMirrorOn
@@ -1716,10 +2078,10 @@ function calculate() {
   if (antSeatDiscPct > 0)
     antHTML += brow(`Seat discount (${antSeatDiscPct}%)`, '−' + fmt(antSeatCostRaw - antSeatCost), 'discount-row');
   antHTML += brow('Net seat cost', fmt(antSeatCost));
-  if (antIncludedCreditTotal > 0)
+  if (antPurchasedCreditValue > 0)
     antHTML += brow(
-      `Included credits (${fmtCred(antIncludedCreditTotal)} · ${antCreditsWholeAcct ? 'whole account' : antSeatUsers + ' users'})`,
-      fmt(antIncludedCreditsValue)
+      `Purchased API credits (${fmt(antPurchasedCreditValue)} · ${antCreditsWholeAcct ? 'whole account' : antSeatUsers + ' users'})`,
+      fmt(antPurchasedCreditValue)
     );
   if (antModelSummaries.length)
     antHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
@@ -1745,11 +2107,11 @@ function calculate() {
   if (antTokenDiscPct > 0)
     antHTML += brow(`Token rate discount (${antTokenDiscPct}%)`, '✓', 'discount-row');
   antHTML += brow('Token subtotal', fmt(antTokenTotal));
-  if (antIncludedCreditTotal > 0) {
+  if (antPurchasedCreditValue > 0) {
     if (antCreditOffset > 0)
-      antHTML += brow(`Credit offset (${fmtCred(antIncludedCreditTotal)} included)`, '−' + fmt(antCreditOffset), 'discount-row');
+      antHTML += brow(`Credit offset (${fmt(antPurchasedCreditValue)} purchased)`, '−' + fmt(antCreditOffset), 'discount-row');
     if (antApiOverage === 0 && antTokenTotal > 0)
-      antHTML += brow('API usage within included pool', `✓ ${fmt(antIncludedCreditsValue - antTokenTotal)} remaining`);
+      antHTML += brow('API usage within purchased credits', `✓ ${fmt(antPurchasedCreditValue - antTokenTotal)} remaining`);
     else if (antApiOverage > 0)
       antHTML += brow(`API overage`, fmt(antApiOverage), 'overage-row');
   }
@@ -1760,56 +2122,144 @@ function calculate() {
   $('antBreakdown').innerHTML = antHTML;
   $('antTotal').textContent   = fmt(antTotal);
 
-  // ── Summary ────────────────────────────────────────────────
-  const diff = Math.abs(ghTotal - antTotal);
-  const pct  = Math.max(ghTotal, antTotal) > 0
-    ? (diff / Math.max(ghTotal, antTotal) * 100).toFixed(1) : '0';
-  const winBanner = $('winnerBanner');
+  // ── Third Competitor (optional) ─────────────────────────────
+  const thirdKey        = $('thirdCompetitorSelect').value;
+  const thirdCompetitor = THIRD_PARTY_COMPETITORS[thirdKey];
+  let thirdTotal = 0, thirdSeatCostRaw = 0, thirdSeatUsers = 0, thirdPlanLabel = '', thirdTokenTotal = 0;
 
-  if (diff < 0.005) {
-    winBanner.innerHTML = `<span class="winner-tie">🤝 Roughly equal cost — ${fmt(ghTotal)}/month each</span>`;
-  } else if (ghTotal < antTotal) {
-    winBanner.innerHTML = `<span class="winner-gh">✅ GitHub Copilot is cheaper by ${fmt(diff)} (${pct}%)</span>
-      <span class="savings-pill savings-gh">Save ${fmt(diff)}/mo</span>`;
-  } else {
-    winBanner.innerHTML = `<span class="winner-ant">✅ Anthropic API is cheaper by ${fmt(diff)} (${pct}%)</span>
-      <span class="savings-pill savings-ant">Save ${fmt(diff)}/mo</span>`;
+  if (thirdCompetitor) {
+    const thirdSeatDiscPct  = $('thirdDiscountEnabled').checked ? (parseFloat($('thirdSeatDiscount').value)  || 0) : 0;
+    const thirdTokenDiscPct = $('thirdDiscountEnabled').checked ? (parseFloat($('thirdTokenDiscount').value) || 0) : 0;
+
+    thirdSeatUsers = Math.max(0, parseInt($('thirdSeatUsers').value) || 0);
+    const thirdPlanPrice = parseFloat($('thirdSeatPlan').value) || 0;
+    thirdSeatCostRaw = thirdPlanPrice * thirdSeatUsers;
+    const thirdSeatCost = applyDiscount(thirdSeatCostRaw, thirdSeatDiscPct);
+    const thirdPlanOption = $('thirdSeatPlan').selectedOptions[0];
+    thirdPlanLabel = thirdPlanOption ? (thirdPlanOption.dataset.name || thirdPlanOption.textContent) : '';
+
+    $('thirdTotalSeats').textContent      = thirdSeatUsers.toLocaleString();
+    $('thirdMonthlySeatCost').textContent = fmt(thirdSeatCostRaw);
+    $('thirdPlanName').textContent        = thirdPlanLabel || '—';
+
+    const thirdModelSummaries = [];
+    readThirdModelRows().forEach(r => {
+      const inputCost      = applyDiscount(r.inputM      * r.model.input, thirdTokenDiscPct);
+      const cachedCost     = applyDiscount(r.cachedM     * r.model.cachedInput, thirdTokenDiscPct);
+      const cacheWriteCost = r.model.cacheWrite
+        ? applyDiscount(r.cacheWriteM * r.model.cacheWrite, thirdTokenDiscPct)
+        : 0;
+      const outputCost     = applyDiscount(r.outputM     * r.model.output, thirdTokenDiscPct);
+      const rowTotal       = inputCost + cachedCost + cacheWriteCost + outputCost;
+      thirdTokenTotal += rowTotal;
+      thirdModelSummaries.push({ label: r.model.label, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal, hasCacheWrite: !!r.model.cacheWrite });
+
+      const costEl = $('thirdrow-' + r.id + '-cost');
+      if (costEl) {
+        costEl.innerHTML = `
+          <span class="cost-item">In: ${fmt(inputCost)}</span>
+          <span class="cost-item">Cached: ${fmt(cachedCost)}</span>
+          ${r.model.cacheWrite ? `<span class="cost-item">CW: ${fmt(cacheWriteCost)}</span>` : ''}
+          <span class="cost-item">Out: ${fmt(outputCost)}</span>
+          <span class="cost-total">${fmt(rowTotal)}</span>`;
+      }
+    });
+
+    thirdTotal = thirdSeatCost + thirdTokenTotal;
+
+    $('thirdModelTag').textContent = thirdModelSummaries.map(s => s.label).join(', ').substring(0, 60);
+
+    let thirdHTML = '';
+    thirdHTML += brow(`Seat cost — ${thirdPlanLabel} (${thirdSeatUsers} × ${fmt(thirdPlanPrice)})`, fmt(thirdSeatCostRaw));
+    if (thirdSeatDiscPct > 0)
+      thirdHTML += brow(`Seat discount (${thirdSeatDiscPct}%)`, '−' + fmt(thirdSeatCostRaw - thirdSeatCost), 'discount-row');
+    thirdHTML += brow('Net seat cost', fmt(thirdSeatCost));
+    if (thirdModelSummaries.length) {
+      thirdHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
+      thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">API Token Usage</div>`;
+      thirdModelSummaries.forEach(s => {
+        thirdHTML += brow(s.label, fmt(s.rowTotal));
+        thirdHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}${s.hasCacheWrite ? `  CW: ${fmt(s.cacheWriteCost)}` : ''}  Out: ${fmt(s.outputCost)}`, '', '');
+      });
+      if (thirdTokenDiscPct > 0)
+        thirdHTML += brow(`Token rate discount (${thirdTokenDiscPct}%)`, '✓', 'discount-row');
+      thirdHTML += brow('Token subtotal', fmt(thirdTokenTotal));
+    }
+    thirdHTML += brow('Monthly Total', fmt(thirdTotal), 'total-row');
+
+    $('thirdBreakdown').innerHTML = thirdHTML;
+    $('thirdTotal').textContent   = fmt(thirdTotal);
   }
 
-  const ghClass  = ghTotal  <= antTotal ? 'lower' : 'higher';
-  const antClass = antTotal <= ghTotal  ? 'lower' : 'higher';
+  // ── Summary ────────────────────────────────────────────────
+  const entries = [
+    { key: 'gh',   label: 'GitHub Copilot',     total: ghTotal,  winnerCls: 'winner-gh',    savingsCls: 'savings-gh' },
+    { key: 'ant',  label: 'Anthropic API', total: antTotal, winnerCls: 'winner-ant',   savingsCls: 'savings-ant' },
+  ];
+  if (thirdCompetitor)
+    entries.push({ key: 'third', label: thirdCompetitor.name, total: thirdTotal, winnerCls: 'winner-third', savingsCls: 'savings-third' });
+
+  const minTotal = Math.min(...entries.map(e => e.total));
+  const maxTotal = Math.max(...entries.map(e => e.total));
+  const cheapest = entries.filter(e => Math.abs(e.total - minTotal) < 0.005);
+  const winBanner = $('winnerBanner');
+
+  if (maxTotal - minTotal < 0.005) {
+    winBanner.innerHTML = `<span class="winner-tie">🤝 Roughly equal cost — ${fmt(minTotal)}/month each</span>`;
+  } else if (cheapest.length > 1) {
+    const tiedLabels = cheapest.map(e => e.label).join(' & ');
+    winBanner.innerHTML = `<span class="winner-tie">🤝 ${tiedLabels} tie for cheapest — ${fmt(minTotal)}/month</span>`;
+  } else {
+    const winner = cheapest[0];
+    const runnerUpTotal = Math.min(...entries.filter(e => e.key !== winner.key).map(e => e.total));
+    const diff = runnerUpTotal - winner.total;
+    const pct  = maxTotal > 0 ? (diff / maxTotal * 100).toFixed(1) : '0';
+    winBanner.innerHTML = `<span class="${winner.winnerCls}">✅ ${winner.label} is cheaper by ${fmt(diff)} (${pct}%)</span>
+      <span class="savings-pill ${winner.savingsCls}">Save ${fmt(diff)}/mo</span>`;
+  }
+
+  const ghClass    = ghTotal    <= minTotal + 0.005 ? 'lower' : 'higher';
+  const antClass   = antTotal   <= minTotal + 0.005 ? 'lower' : 'higher';
+  const thirdClass = thirdTotal <= minTotal + 0.005 ? 'lower' : 'higher';
 
   $('comparisonRows').innerHTML = `
     <tr>
       <td>Seats (raw cost)</td>
       <td>${fmt(rawSeatCost)} (${totalSeats} seats)</td>
       <td>${fmt(antSeatCostRaw)} (${antSeatUsers} × ${antPlanLabel})</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? fmt(thirdSeatCostRaw) + ` (${thirdSeatUsers} × ${thirdPlanLabel})` : ''}</td>
     </tr>
     <tr>
-      <td>Included AI credits (value)</td>
+      <td>AI credits / API usage</td>
       <td>${fmt(includedCredits * 0.01)} (${fmtCred(includedCredits)} credits)</td>
-      <td>${antIncludedCreditTotal > 0 ? fmt(antIncludedCreditsValue) + ' (' + fmtCred(antIncludedCreditTotal) + ' credits)' : '—'}</td>
+      <td>${antPurchasedCreditValue > 0 ? fmt(antPurchasedCreditValue) + ' purchased' : 'No credits purchased'}</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? (thirdCompetitor.modelsProvider ? 'n/a — optional API usage below' : 'n/a — seat-based only') : ''}</td>
     </tr>
     <tr>
       <td>Token / API costs</td>
       <td>${fmt(overageCost)} overage</td>
-      <td>${antIncludedCreditTotal > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
+      <td>${antPurchasedCreditValue > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? (thirdCompetitor.modelsProvider ? fmt(thirdTokenTotal) : 'n/a') : ''}</td>
     </tr>
     <tr>
       <td><strong>Total / month</strong></td>
       <td class="${ghClass}"><strong>${fmt(ghTotal)}</strong></td>
       <td class="${antClass}"><strong>${fmt(antTotal)}</strong></td>
+      <td class="${thirdCompetitor ? thirdClass : 'hidden'}"><strong>${thirdCompetitor ? fmt(thirdTotal) : ''}</strong></td>
     </tr>
     <tr>
       <td><strong>Total / year</strong></td>
       <td class="${ghClass}"><strong>${fmt(ghTotal * 12)}</strong></td>
       <td class="${antClass}"><strong>${fmt(antTotal * 12)}</strong></td>
+      <td class="${thirdCompetitor ? thirdClass : 'hidden'}"><strong>${thirdCompetitor ? fmt(thirdTotal * 12) : ''}</strong></td>
     </tr>`;
 }
 
 // ── Initialisation ────────────────────────────────────────────────────────────
 
 function init() {
+  populateThirdCompetitorOptions();
+
   // Seed one Copilot model row (Anthropic Sonnet 4.6 as default)
   const id1 = nextId++;
   ghRowIds.push(id1);
