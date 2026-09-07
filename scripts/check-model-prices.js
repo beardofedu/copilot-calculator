@@ -135,18 +135,23 @@ function fmtNum(n) {
 }
 
 function updateField(line, key, newVal) {
-  if (newVal === undefined) return line;
+  if (newVal === undefined) return { line, changed: false };
   const re = fieldRegex(key);
   const match = line.match(re);
-  if (!match) return line;
+  if (!match) return { line, changed: false };
   const oldVal = parseFloat(match[2]);
-  if (Math.abs(oldVal - newVal) < 1e-9) return line;
-  return line.replace(re, `$1${fmtNum(newVal)}`);
+  if (Math.abs(oldVal - newVal) < 1e-9) return { line, changed: false };
+  return { line: line.replace(re, `$1${fmtNum(newVal)}`), changed: true, oldVal };
 }
 
 function fieldRegex(key) {
   return new RegExp('(\\b' + key + ':\\s*)([0-9.]+)');
 }
+
+// Matches the id in a `COPILOT_MODELS` entry (`id: 'gpt5mini'`) or the key
+// of an `ANTHROPIC_MODELS` entry (`'sonnet-5': { ... }`), ignoring other
+// quoted strings on the line such as `label` values.
+const LINE_ID_RE = /(?:\bid:\s*'([^']+)'|^\s*'([^']+)':)/;
 
 async function main() {
   const res = await fetch(DOCS_URL);
@@ -161,26 +166,26 @@ async function main() {
   const changes = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const quoted = lines[i].match(/'[^']+'/g) || [];
-    for (const token of quoted) {
-      const entry = ID_TO_ENTRY.get(token);
-      if (!entry) continue;
+    const idMatch = lines[i].match(LINE_ID_RE);
+    if (!idMatch) continue;
 
-      const idOnLine = token.slice(1, -1);
-      const key = entry.docLabel + '|' + (entry.tier || '');
-      const official = docPrices.get(key);
-      if (!official) continue;
+    const idOnLine = idMatch[1] || idMatch[2];
+    const entry = ID_TO_ENTRY.get(`'${idOnLine}'`);
+    if (!entry) continue;
 
-      let line = lines[i];
-      for (const field of ['input', 'cachedInput', 'cacheWrite', 'output']) {
-        const before = line;
-        line = updateField(line, field, official[field]);
-        if (line !== before) {
-          changes.push(`${idOnLine}: ${field} ${before.match(fieldRegex(field))[2]} -> ${fmtNum(official[field])}`);
-        }
+    const key = entry.docLabel + '|' + (entry.tier || '');
+    const official = docPrices.get(key);
+    if (!official) continue;
+
+    let line = lines[i];
+    for (const field of ['input', 'cachedInput', 'cacheWrite', 'output']) {
+      const result = updateField(line, field, official[field]);
+      line = result.line;
+      if (result.changed) {
+        changes.push(`${idOnLine}: ${field} ${fmtNum(result.oldVal)} -> ${fmtNum(official[field])}`);
       }
-      lines[i] = line;
     }
+    lines[i] = line;
   }
 
   const updated = lines.join('\n');
