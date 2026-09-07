@@ -1,0 +1,45 @@
+name: Check model prices
+
+on:
+  schedule:
+    # Every Monday at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check prices against official docs
+        id: check
+        run: node scripts/check-model-prices.js
+
+      - name: Create pull request
+        if: steps.check.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'Update model prices to match official documentation'
+          title: 'Update model prices to match official documentation'
+          body: |
+            This automated PR was opened by the [Check model prices](../actions/workflows/check-model-prices.yml) workflow.
+
+            It compares the prices in `index.html` against the [GitHub Copilot models and pricing docs](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing) and updates any values that have drifted out of sync.
+
+            ${{ steps.check.outputs.summary }}
+
+            Please review the changes before merging.
+          branch: automated/update-model-prices
+          delete-branch: true
+          assignees: beardofedu
