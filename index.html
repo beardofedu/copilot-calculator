@@ -2346,6 +2346,17 @@ const EXAMPLE_FLAGSHIP_MODEL = {
   moonshot:  'kimi27',
 };
 
+// Returns the "equivalent of Claude Opus 4.8" model id for a provider, falling
+// back to the provider's first listed model (with a console warning) if the
+// provider is missing from EXAMPLE_FLAGSHIP_MODEL.
+function getFlagshipModelId(provider) {
+  const mapped = EXAMPLE_FLAGSHIP_MODEL[provider];
+  if (mapped) return mapped;
+  console.warn(`EXAMPLE_FLAGSHIP_MODEL is missing an entry for provider "${provider}"; falling back to its first listed model.`);
+  const providerModels = COPILOT_MODELS[provider] || [];
+  return providerModels[0] && providerModels[0].id;
+}
+
 // Startup check: warn immediately (rather than only when that competitor is
 // selected) if a third-party competitor's provider is missing a flagship
 // model mapping above.
@@ -2453,22 +2464,13 @@ function applyExampleToThird() {
   clearThirdModelRows();
   if ($('thirdDiscountEnabled').checked) toggleDiscount('third');
 
-  if (!competitor) {
-    // No competitor selected: nothing to seed, but clear any stale example
-    // rows/seats left over from a previously selected competitor.
-    $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
-    return;
-  }
-
+  // Always seat 100 users while the example is active, even before a
+  // competitor is selected, so seats already match the example once one is.
   $('thirdSeatUsers').value = EXAMPLE_USERS;
 
-  if (!competitor.modelsProvider) return;
+  if (!competitor || !competitor.modelsProvider) return;
 
-  const providerModels = COPILOT_MODELS[competitor.modelsProvider] || [];
-  if (!EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider]) {
-    console.warn(`No EXAMPLE_FLAGSHIP_MODEL entry for provider "${competitor.modelsProvider}"; falling back to its first listed model.`);
-  }
-  const modelId = EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider] || (providerModels[0] && providerModels[0].id);
+  const modelId = getFlagshipModelId(competitor.modelsProvider);
   if (!modelId) return;
   appendThirdModelRow(competitor.modelsProvider, modelId, { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
 }
