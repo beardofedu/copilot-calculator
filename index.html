@@ -2122,7 +2122,7 @@ function calculate() {
   // ── Third Competitor (optional) ─────────────────────────────
   const thirdKey        = $('thirdCompetitorSelect').value;
   const thirdCompetitor = THIRD_PARTY_COMPETITORS[thirdKey];
-  let thirdTotal = 0, thirdSeatCostRaw = 0, thirdSeatUsers = 0, thirdPlanLabel = '';
+  let thirdTotal = 0, thirdSeatCostRaw = 0, thirdSeatUsers = 0, thirdPlanLabel = '', thirdTokenTotal = 0;
 
   if (thirdCompetitor) {
     const thirdSeatDiscPct  = $('thirdDiscountEnabled').checked ? (parseFloat($('thirdSeatDiscount').value)  || 0) : 0;
@@ -2139,7 +2139,7 @@ function calculate() {
     $('thirdMonthlySeatCost').textContent = fmt(thirdSeatCostRaw);
     $('thirdPlanName').textContent        = thirdPlanLabel || '—';
 
-    let thirdTokenTotal = 0;
+    thirdTokenTotal = 0;
     const thirdModelSummaries = [];
     readThirdModelRows().forEach(r => {
       const inputCost      = applyDiscount(r.inputM      * r.model.input, thirdTokenDiscPct);
@@ -2234,7 +2234,7 @@ function calculate() {
       <td>Token / API costs</td>
       <td>${fmt(overageCost)} overage</td>
       <td>${antPurchasedCreditValue > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
-      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? fmt(thirdTotal - thirdSeatCostRaw) : ''}</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? fmt(thirdTokenTotal) : ''}</td>
     </tr>
     <tr>
       <td><strong>Total / month</strong></td>
