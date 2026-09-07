@@ -379,6 +379,7 @@
     .mirror-row-header .arrow { color: var(--muted); margin: 0 2px; }
     .mirror-row-header .gh-label { color: var(--muted); }
     .mirror-row-header .ant-label { color: var(--accent-ant-light); font-weight: 600; }
+    .mirror-row-header .third-label { color: var(--accent-third-light); font-weight: 600; }
     .mirror-row-header .map-badge {
       font-size: 10px;
       padding: 1px 6px;
@@ -1845,10 +1846,12 @@ function readThirdModelRows() {
 
 function closestThirdModel(provider, ghModel) {
   const models = COPILOT_MODELS[provider] || [];
+  const rateSum = m => (m.input || 0) + (m.output || 0) + (m.cachedInput || 0) + (m.cacheWrite || 0);
+  const ghSum = rateSum(ghModel);
   return models.reduce((closest, model) => {
     if (!closest) return model;
-    const modelDistance = Math.abs((model.input + model.output) - (ghModel.input + ghModel.output));
-    const closestDistance = Math.abs((closest.input + closest.output) - (ghModel.input + ghModel.output));
+    const modelDistance = Math.abs(rateSum(model) - ghSum);
+    const closestDistance = Math.abs(rateSum(closest) - ghSum);
     return modelDistance < closestDistance ? model : closest;
   }, null);
 }
@@ -2221,7 +2224,7 @@ function calculate() {
             <div class="mirror-row-header">
               <span class="gh-label">${s.ghLabel}</span>
               <span class="arrow">→</span>
-              <span class="ant-label">${s.label}</span>
+              <span class="third-label">${s.label}</span>
             </div>
             <div class="mirror-row-cost">
               <span class="cost-item">In: ${fmt(s.inputCost)}</span>
@@ -2235,7 +2238,7 @@ function calculate() {
             <div class="mirror-row-header">
               <span class="gh-label">${s.label}</span>
               <span class="arrow">→</span>
-              <span class="ant-label">Direct credit usage</span>
+              <span class="third-label">Direct credit usage</span>
             </div>
             <div class="mirror-row-cost">
               <span class="cost-item">GH credits: ${fmtCred(s.credits)}</span>
