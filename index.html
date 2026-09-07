@@ -1046,18 +1046,18 @@
         <!-- ── Optional API Token Usage ── -->
         <div id="thirdModelSection">
           <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-            <span>API Token Usage <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></span>
+            <span>Model Token Usage <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></span>
           </div>
           <div class="toggle-row" onclick="toggleThirdMirror(event)" style="margin-bottom:10px">
             <input type="checkbox" id="thirdMirrorEnabled" />
             <div>
               <div class="toggle-label">Assume same usage as GitHub Copilot side</div>
-              <div class="toggle-desc">Uses Copilot token volumes with this competitor's API model rates</div>
+              <div class="toggle-desc">Uses Copilot token volumes with this competitor's model rates</div>
             </div>
           </div>
           <div id="thirdMirrorDisclaimer" class="mirror-disclaimer hidden">
             <div class="disc-title">⚠️ Generic Assumption — Not a Direct Comparison</div>
-            This estimate reuses token volumes from the GitHub Copilot side with the selected competitor's closest available API models. It is intended only as an illustrative estimate.
+            This estimate reuses token volumes from the GitHub Copilot side with the selected competitor's closest available models. It is intended only as an illustrative estimate.
           </div>
           <div id="thirdMirroredContainer" class="hidden"></div>
           <div id="thirdManualRows">
@@ -1204,6 +1204,11 @@ const COPILOT_MODELS = {
   moonshot: [
     { id: 'kimi27',       label: 'Kimi K2.7 Code',            input: 0.95, cachedInput: 0.19, output: 4.00 },
   ],
+  cursor: [
+    { id: 'auto',         label: 'Auto',                      input: 1.25, cachedInput: 0.25, output: 6.00 },
+    { id: 'composer25',   label: 'Composer 2.5',              input: 0.50, cachedInput: 0.05, output: 2.50 },
+    { id: 'grok46',       label: 'Grok 4.6',                  input: 2.00, cachedInput: 0.50, output: 6.00 },
+  ],
 };
 
 const ANTHROPIC_MODELS = {
@@ -1275,8 +1280,8 @@ const THIRD_PARTY_COMPETITORS = {
   cursor: {
     name: 'Cursor',
     icon: '⌨️',
-    infoBanner: 'Cursor is an AI-first code editor with a <strong>seat-based pricing model</strong>. The calculator models the published seat price and any direct API usage below, but does not assume a separate AI-credit pool or vendor-specific overage rules unless the vendor publishes them explicitly.',
-    modelsProvider: null,
+    infoBanner: 'Cursor is an AI-first code editor with a <strong>seat-based pricing model</strong>. Add published Cursor model-usage rates below to estimate on-demand consumption; included monthly usage, plan-specific overage rules, and team or regional surcharges are not modeled.',
+    modelsProvider: 'cursor',
     plans: [
       { value: '0',   name: 'Hobby',          label: 'Hobby — $0/user/month' },
       { value: '20',  name: 'Pro',            label: 'Pro — $20/user/month' },
@@ -1284,6 +1289,7 @@ const THIRD_PARTY_COMPETITORS = {
       { value: '120', name: 'Teams Premium',  label: 'Teams Premium — $120/user/month' },
     ],
     source: { text: 'Cursor pricing', url: 'https://cursor.com/pricing' },
+    modelSource: { text: 'Cursor models and pricing', url: 'https://cursor.com/docs/models-and-pricing' },
   },
   amazonq: {
     name: 'Amazon Q Developer',
@@ -1778,8 +1784,8 @@ function showModelTT(triggerEl, vendor, rowId) {
     model = COPILOT_MODELS[provider].find(m => m.id === modelSel.value);
     const thirdKey = $('thirdCompetitorSelect').value;
     const competitor = THIRD_PARTY_COMPETITORS[thirdKey];
-    sourceText = competitor ? competitor.source.text : 'Pricing source';
-    sourceUrl  = competitor ? competitor.source.url  : GH_DOCS_URL;
+    sourceText = competitor ? (competitor.modelSource || competitor.source).text : 'Pricing source';
+    sourceUrl  = competitor ? (competitor.modelSource || competitor.source).url  : GH_DOCS_URL;
   } else {
     const rowEl = $('antrow-' + rowId);
     if (!rowEl) return;
@@ -2431,6 +2437,7 @@ const EXAMPLE_FLAGSHIP_MODEL = {
   microsoft: 'maicodeflash',
   xai:       'grok45lc',
   moonshot:  'kimi27',
+  cursor:    'grok46',
 };
 
 // Returns the "equivalent of Claude Opus 4.8" model id for a provider, falling
