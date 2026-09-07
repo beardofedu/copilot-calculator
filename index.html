@@ -2141,7 +2141,6 @@ function calculate() {
     $('thirdMonthlySeatCost').textContent = fmt(thirdSeatCostRaw);
     $('thirdPlanName').textContent        = thirdPlanLabel || '—';
 
-    thirdTokenTotal = 0;
     const thirdModelSummaries = [];
     readThirdModelRows().forEach(r => {
       const inputCost      = applyDiscount(r.inputM      * r.model.input, thirdTokenDiscPct);
@@ -2206,6 +2205,9 @@ function calculate() {
 
   if (maxTotal - minTotal < 0.005) {
     winBanner.innerHTML = `<span class="winner-tie">🤝 Roughly equal cost — ${fmt(minTotal)}/month each</span>`;
+  } else if (cheapest.length > 1) {
+    const tiedLabels = cheapest.map(e => e.label).join(' & ');
+    winBanner.innerHTML = `<span class="winner-tie">🤝 ${tiedLabels} tie for cheapest — ${fmt(minTotal)}/month</span>`;
   } else {
     const winner = cheapest[0];
     const runnerUpTotal = Math.min(...entries.filter(e => e.key !== winner.key).map(e => e.total));
