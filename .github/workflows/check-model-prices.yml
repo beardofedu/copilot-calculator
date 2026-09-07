@@ -1,4 +1,4 @@
-name: Check model prices
+name: Check model and competitor prices
 
 on:
   schedule:
@@ -22,24 +22,43 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Check prices against official docs
-        id: check
+      - name: Check model prices against official docs
+        id: check_models
         run: node scripts/check-model-prices.js
 
+      - name: Check competitor prices against public pricing pages
+        id: check_competitors
+        run: node scripts/check-competitor-prices.js
+
+      - name: Combine results
+        id: combine
+        run: |
+          if [ "${{ steps.check_models.outputs.changed }}" = "true" ] || [ "${{ steps.check_competitors.outputs.changed }}" = "true" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create pull request
-        if: steps.check.outputs.changed == 'true'
+        if: steps.combine.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: 'Update model prices to match official documentation'
-          title: 'Update model prices to match official documentation'
+          commit-message: 'Update model and competitor prices'
+          title: 'Update model and competitor prices'
           body: |
-            This automated PR was opened by the [Check model prices](../actions/workflows/check-model-prices.yml) workflow.
+            This automated PR was opened by the [Check model and competitor prices](../actions/workflows/check-model-prices.yml) workflow.
 
-            It compares the prices in `index.html` against the [GitHub Copilot models and pricing docs](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing) and updates any values that have drifted out of sync.
+            It compares the GitHub Copilot / Anthropic per-token prices in `index.html` against the [GitHub Copilot models and pricing docs](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing), and the third-party competitor seat prices against each vendor's public pricing page, updating any values that have drifted out of sync.
 
-            ${{ steps.check.outputs.summary }}
+            #### Model prices
 
-            Please review the changes before merging.
+            ${{ steps.check_models.outputs.summary }}
+
+            #### Competitor prices
+
+            ${{ steps.check_competitors.outputs.summary }}
+
+            Please review the changes before merging, especially any competitor price updates, since those are matched heuristically against marketing pages rather than a structured data source.
           branch: automated/update-model-prices
           delete-branch: true
           assignees: beardofedu
