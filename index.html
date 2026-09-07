@@ -2414,7 +2414,7 @@ function seedDefaultAntModelRow() {
 
 function applyExampleToGh() {
   $('ghBusinessSeats').value = EXAMPLE_USERS;
-  $('ghEnterpriseSeats').value = 0;
+  $('ghEnterpriseSeats').value = DEFAULT_GH_ENTERPRISE_SEATS;
 
   if ($('ghDirectCreditsEnabled').checked) toggleGhDirectCredits();
   ghCreditIds = [];
@@ -2439,7 +2439,13 @@ function applyExampleToAnt() {
 function applyExampleToThird() {
   const key = $('thirdCompetitorSelect').value;
   const competitor = THIRD_PARTY_COMPETITORS[key];
-  if (!competitor) return;
+  if (!competitor) {
+    // No competitor selected: nothing to seed, but clear any stale example
+    // rows/seats left over from a previously selected competitor.
+    $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
+    clearThirdModelRows();
+    return;
+  }
 
   $('thirdSeatUsers').value = EXAMPLE_USERS;
 
@@ -2450,11 +2456,10 @@ function applyExampleToThird() {
 
   clearThirdModelRows();
   const providerModels = COPILOT_MODELS[competitor.modelsProvider] || [];
-  const fallbackModel = providerModels[providerModels.length - 1] || providerModels[0];
   if (!EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider]) {
-    console.warn(`No EXAMPLE_FLAGSHIP_MODEL entry for provider "${competitor.modelsProvider}"; falling back to the last model in its list.`);
+    console.warn(`No EXAMPLE_FLAGSHIP_MODEL entry for provider "${competitor.modelsProvider}"; falling back to its first listed model.`);
   }
-  const modelId = EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider] || (fallbackModel && fallbackModel.id);
+  const modelId = EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider] || (providerModels[0] && providerModels[0].id);
   if (!modelId) return;
   appendThirdModelRow(competitor.modelsProvider, modelId, { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
 }
