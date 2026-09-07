@@ -2346,6 +2346,15 @@ const EXAMPLE_FLAGSHIP_MODEL = {
   moonshot:  'kimi27',
 };
 
+// Startup check: warn immediately (rather than only when that competitor is
+// selected) if a third-party competitor's provider is missing a flagship
+// model mapping above.
+Object.values(THIRD_PARTY_COMPETITORS).forEach(c => {
+  if (c.modelsProvider && !EXAMPLE_FLAGSHIP_MODEL[c.modelsProvider]) {
+    console.warn(`EXAMPLE_FLAGSHIP_MODEL is missing an entry for provider "${c.modelsProvider}" (used by "${c.name}").`);
+  }
+});
+
 let exampleActive = false;
 
 function setModelRowValues(rowEl, modelValue, { inputM, cachedM = 0, cacheWriteM = 0, outputM }) {
