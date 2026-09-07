@@ -193,8 +193,8 @@
       gap: 20px;
     }
     .grid-2.three-col { grid-template-columns: 1fr 1fr 1fr; }
-    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
     @media (max-width: 1300px) { .grid-2.three-col { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 900px) { .grid-2, .grid-2.three-col { grid-template-columns: 1fr; } }
 
     /* ── Competitor picker ──────────────────────────────────── */
     .competitor-picker {
@@ -418,8 +418,8 @@
       gap: 20px;
     }
     .results-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
-    @media (max-width: 900px) { .results-grid { grid-template-columns: 1fr; } }
     @media (max-width: 1300px) { .results-grid.three-col { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 900px) { .results-grid, .results-grid.three-col { grid-template-columns: 1fr; } }
 
     .result-card {
       background: var(--surface);
@@ -1698,8 +1698,10 @@ function showModelTT(triggerEl, vendor, rowId) {
     const modelSel = rowEl.querySelector('[data-field="model"]');
     const provider = modelSel.dataset.provider;
     model = COPILOT_MODELS[provider].find(m => m.id === modelSel.value);
-    sourceText = 'GitHub Copilot billing docs';
-    sourceUrl  = GH_DOCS_URL;
+    const thirdKey = $('thirdCompetitorSelect').value;
+    const competitor = THIRD_PARTY_COMPETITORS[thirdKey];
+    sourceText = competitor ? competitor.source.text : 'Pricing source';
+    sourceUrl  = competitor ? competitor.source.url  : GH_DOCS_URL;
   } else {
     const rowEl = $('antrow-' + rowId);
     if (!rowEl) return;
