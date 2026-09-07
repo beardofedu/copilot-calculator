@@ -1846,13 +1846,13 @@ function readThirdModelRows() {
 
 function closestThirdModel(provider, ghModel) {
   const models = COPILOT_MODELS[provider] || [];
-  const rateSum = m => (m.input || 0) + (m.output || 0) + (m.cachedInput || 0) + (m.cacheWrite || 0);
-  const ghSum = rateSum(ghModel);
+  const rateDistance = m => Math.abs((m.input || 0) - (ghModel.input || 0))
+    + Math.abs((m.output || 0) - (ghModel.output || 0))
+    + Math.abs((m.cachedInput || 0) - (ghModel.cachedInput || 0))
+    + Math.abs((m.cacheWrite || 0) - (ghModel.cacheWrite || 0));
   return models.reduce((closest, model) => {
     if (!closest) return model;
-    const modelDistance = Math.abs(rateSum(model) - ghSum);
-    const closestDistance = Math.abs(rateSum(closest) - ghSum);
-    return modelDistance < closestDistance ? model : closest;
+    return rateDistance(model) < rateDistance(closest) ? model : closest;
   }, null);
 }
 
