@@ -2347,6 +2347,37 @@ function setModelRowValues(rowEl, modelValue, { inputM, cachedM = 0, cacheWriteM
   rowEl.querySelector('[data-field="outputM"]').value = outputM;
 }
 
+// Appends a new GH model row seeded with a model + token usage, updating ghRowIds.
+function appendGhModelRow(modelId, tokenValues) {
+  const id = nextId++;
+  ghRowIds.push(id);
+  const row = buildGhModelRow(id, 'anthropic');
+  row.querySelector('[data-field="provider"]').value = 'anthropic';
+  $('ghModelRowsContainer').appendChild(row);
+  setModelRowValues(row, modelId, tokenValues);
+  return row;
+}
+
+// Appends a new Anthropic model row seeded with a model + token usage, updating antRowIds.
+function appendAntModelRow(modelId, tokenValues) {
+  const id = nextId++;
+  antRowIds.push(id);
+  const row = buildAntModelRow(id, modelId);
+  $('antModelRowsContainer').appendChild(row);
+  setModelRowValues(row, modelId, tokenValues);
+  return row;
+}
+
+// Appends a new third-party model row seeded with a model + token usage, updating thirdRowIds.
+function appendThirdModelRow(provider, modelId, tokenValues) {
+  const id = nextId++;
+  thirdRowIds.push(id);
+  const row = buildThirdModelRow(id, provider);
+  $('thirdModelRowsContainer').appendChild(row);
+  setModelRowValues(row, modelId, tokenValues);
+  return row;
+}
+
 // Seeds the default GitHub Copilot model row (Claude Sonnet 4.6). Shared by
 // init() and resetExample() so the default state stays consistent between them.
 function seedDefaultGhModelRow() {
@@ -2381,12 +2412,7 @@ function applyExampleToGh() {
 
   ghRowIds = [];
   $('ghModelRowsContainer').innerHTML = '';
-  const id = nextId++;
-  ghRowIds.push(id);
-  const row = buildGhModelRow(id, 'anthropic');
-  $('ghModelRowsContainer').appendChild(row);
-  row.querySelector('[data-field="provider"]').value = 'anthropic';
-  setModelRowValues(row, 'opus48', { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
+  appendGhModelRow('opus48', { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
 }
 
 function applyExampleToAnt() {
@@ -2397,11 +2423,7 @@ function applyExampleToAnt() {
 
   antRowIds = [];
   $('antModelRowsContainer').innerHTML = '';
-  const id = nextId++;
-  antRowIds.push(id);
-  const row = buildAntModelRow(id, 'opus-4.8');
-  $('antModelRowsContainer').appendChild(row);
-  setModelRowValues(row, 'opus-4.8', { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
+  appendAntModelRow('opus-4.8', { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
 }
 
 function applyExampleToThird() {
@@ -2411,18 +2433,17 @@ function applyExampleToThird() {
 
   $('thirdSeatUsers').value = EXAMPLE_USERS;
 
-  if (!competitor.modelsProvider) return;
+  if (!competitor.modelsProvider) {
+    clearThirdModelRows();
+    return;
+  }
 
   clearThirdModelRows();
-  const id = nextId++;
-  thirdRowIds.push(id);
-  const row = buildThirdModelRow(id, competitor.modelsProvider);
-  $('thirdModelRowsContainer').appendChild(row);
   const providerModels = COPILOT_MODELS[competitor.modelsProvider] || [];
   const fallbackModel = providerModels[providerModels.length - 1] || providerModels[0];
   const modelId = EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider] || (fallbackModel && fallbackModel.id);
   if (!modelId) return;
-  setModelRowValues(row, modelId, { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
+  appendThirdModelRow(competitor.modelsProvider, modelId, { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
 }
 
 function applyExample() {
@@ -2461,7 +2482,11 @@ function resetExample() {
   // Reset third-party competitor (rebuilds seats/plan/model row from its defaults)
   $('thirdSeatUsers').value = 10;
   if ($('thirdDiscountEnabled').checked) toggleDiscount('third');
-  if ($('thirdCompetitorSelect').value) onThirdCompetitorChange();
+  if ($('thirdCompetitorSelect').value) {
+    onThirdCompetitorChange();
+  } else {
+    clearThirdModelRows();
+  }
 
   calculate();
 }
