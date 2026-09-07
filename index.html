@@ -1043,7 +1043,7 @@
           </div>
         </div>
 
-        <!-- ── Optional API Token Usage ── -->
+        <!-- ── Optional Model Token Usage ── -->
         <div id="thirdModelSection">
           <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
             <span>Model Token Usage <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></span>
@@ -1294,7 +1294,7 @@ const THIRD_PARTY_COMPETITORS = {
   amazonq: {
     name: 'Amazon Q Developer',
     icon: '🅰️',
-    infoBanner: 'Amazon Q Developer uses a <strong>seat-based pricing model</strong>. The calculator includes the published seat price and optional API usage below, but does not model usage credits or overage rules that are not explicitly published by the vendor.',
+    infoBanner: 'Amazon Q Developer uses a <strong>seat-based pricing model</strong>. Pro includes 4,000 code-transformation lines per user each month, with published overage of $0.003 per additional line. This calculator currently models the seat price only; Bedrock and other AWS API usage are billed separately.',
     modelsProvider: null,
     plans: [
       { value: '0',  name: 'Free', label: 'Free — $0/user/month' },
@@ -1305,23 +1305,22 @@ const THIRD_PARTY_COMPETITORS = {
   gemini: {
     name: 'Google Gemini Code Assist',
     icon: '✨',
-    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong>. Optional direct Gemini API usage can be added below using standard per-token rates; the calculator does not assume a separate AI-credit pool.',
+    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong> with quotas, not a published AI-credit pool or token overage rate. Optional Gemini API usage below is billed separately at standard per-token rates and is not Code Assist consumption.',
     modelsProvider: 'google',
     plans: [
-      { value: '19', name: 'Standard',   label: 'Standard — $19/user/month', selected: true },
-      { value: '45', name: 'Enterprise', label: 'Enterprise — $45/user/month' },
+      { value: '22.80', name: 'Standard',   label: 'Standard — $22.80/user/month', selected: true },
+      { value: '54',    name: 'Enterprise', label: 'Enterprise — $54/user/month' },
     ],
     source: { text: 'Gemini Code Assist pricing', url: 'https://cloud.google.com/products/gemini/pricing' },
   },
   chatgpt: {
     name: 'OpenAI ChatGPT',
     icon: '🤖',
-    infoBanner: 'ChatGPT Business/Enterprise uses a <strong>seat-based pricing model</strong>. Optional direct OpenAI API usage can be added below using standard per-token rates; the calculator does not assume a separate AI-credit pool.',
+    infoBanner: 'ChatGPT Business uses a <strong>seat-based pricing model</strong> with plan-specific included use. Optional workspace credits can cover in-product usage after included limits, but their rate card and Enterprise terms are contract- or feature-specific and are not modeled here. OpenAI API usage below is billed separately.',
     modelsProvider: 'openai',
     plans: [
       { value: '25',  name: 'Business Standard',    label: 'Business Standard — $25/user/month', selected: true },
       { value: '125', name: 'Business Premium',     label: 'Business Premium — $125/user/month' },
-      { value: '60',  name: 'Enterprise (est.)',    label: 'Enterprise (est.) — $60/user/month' },
     ],
     source: { text: 'OpenAI ChatGPT pricing', url: 'https://openai.com/chatgpt/pricing/' },
   },
