@@ -2459,6 +2459,8 @@ function applyExampleToAnt() {
 }
 
 function applyExampleToThird() {
+  if (!exampleActive) return;
+
   const key = $('thirdCompetitorSelect').value;
   const competitor = THIRD_PARTY_COMPETITORS[key];
   clearThirdModelRows();
