@@ -134,9 +134,16 @@ function fmtNum(n) {
   return n.toFixed(needsThreeDecimals ? 3 : 2);
 }
 
+const PRICE_FIELDS = ['input', 'cachedInput', 'cacheWrite', 'output'];
+
+// Precompute one regex per field since the set of keys is fixed.
+const FIELD_REGEXES = new Map(
+  PRICE_FIELDS.map(key => [key, new RegExp('(\\b' + key + ':\\s*)([0-9.]+)')])
+);
+
 function updateField(line, key, newVal) {
   if (newVal === undefined) return { line, changed: false };
-  const re = fieldRegex(key);
+  const re = FIELD_REGEXES.get(key);
   const match = line.match(re);
   if (!match) return { line, changed: false };
   const oldVal = parseFloat(match[2]);
@@ -144,17 +151,15 @@ function updateField(line, key, newVal) {
   return { line: line.replace(re, `$1${fmtNum(newVal)}`), changed: true, oldVal };
 }
 
-function fieldRegex(key) {
-  return new RegExp('(\\b' + key + ':\\s*)([0-9.]+)');
-}
-
 // Matches the id in a `COPILOT_MODELS` entry (`id: 'gpt5mini'`) or the key
 // of an `ANTHROPIC_MODELS` entry (`'sonnet-5': { ... }`), ignoring other
 // quoted strings on the line such as `label` values.
 const LINE_ID_RE = /(?:\bid:\s*'([^']+)'|^\s*'([^']+)':)/;
 
+const FETCH_TIMEOUT_MS = 15000;
+
 async function main() {
-  const res = await fetch(DOCS_URL);
+  const res = await fetch(DOCS_URL, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) {
     throw new Error(`Failed to fetch ${DOCS_URL}: ${res.status} ${res.statusText}`);
   }
@@ -178,7 +183,7 @@ async function main() {
     if (!official) continue;
 
     let line = lines[i];
-    for (const field of ['input', 'cachedInput', 'cacheWrite', 'output']) {
+    for (const field of PRICE_FIELDS) {
       const result = updateField(line, field, official[field]);
       line = result.line;
       if (result.changed) {
