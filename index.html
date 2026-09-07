@@ -212,6 +212,49 @@
     .competitor-picker select { padding: 6px 10px; font-size: 13px; min-width: 220px; }
     .competitor-picker .hint { font-size: 11px; color: var(--muted); }
 
+    /* ── Example banner ──────────────────────────────────────── */
+    .example-banner {
+      background: linear-gradient(135deg, rgba(56,139,253,.12), rgba(137,87,229,.12));
+      border: 1px solid var(--accent-blue-light);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .example-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 260px;
+      cursor: pointer;
+      border-radius: 6px;
+      padding: 4px 6px;
+      margin: -4px -6px;
+      transition: background .15s;
+    }
+    .example-info:hover, .example-info:focus-visible { background: rgba(56,139,253,.1); }
+    .example-info:focus-visible { outline: 2px solid var(--accent-blue-light); outline-offset: 2px; }
+    .example-icon { font-size: 22px; flex-shrink: 0; }
+    .example-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .example-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .example-reset-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color .15s, color .15s;
+    }
+    .example-reset-btn:hover { border-color: var(--accent-blue-light); color: var(--accent-blue-light); }
+
     /* ── Card ────────────────────────────────────────────── */
     .card {
       background: var(--surface);
@@ -689,6 +732,18 @@
 </div>
 
 <div class="container">
+
+  <!-- ── 1M Credits Example ────────────────────────────────────── -->
+  <div class="example-banner" id="exampleBanner">
+    <div class="example-info" role="button" tabindex="0" onclick="applyExample()" onkeydown="if(!event.repeat&&(event.key==='Enter'||event.key===' ')){event.preventDefault();applyExample();}">
+      <span class="example-icon" aria-hidden="true">⚡</span>
+      <div>
+        <div class="example-title">Try an example: 100 users · 1,000,000 AI Credits (Claude Opus 4.8 equivalent)</div>
+        <div class="example-desc">Populates seats and token usage across GitHub Copilot, Anthropic, and the selected third-party competitor.</div>
+      </div>
+    </div>
+    <button type="button" class="example-reset-btn" onclick="resetExample()" title="Clear the example and restore default inputs">↺ Reset</button>
+  </div>
 
   <!-- ── Competitor Picker ────────────────────────────────────── -->
   <div class="competitor-picker">
@@ -1598,6 +1653,10 @@ function onThirdCompetitorChange() {
     seedThirdModelRow(competitor.modelsProvider);
   }
 
+  if (exampleActive) {
+    applyExampleToThird();
+  }
+
   calculate();
 }
 
@@ -2344,23 +2403,219 @@ function calculate() {
 
 // ── Initialisation ────────────────────────────────────────────────────────────
 
+// ── 1M Credits Example ────────────────────────────────────────────────────────
+
+const EXAMPLE_USERS   = 100;
+const EXAMPLE_INPUT_M  = 1000; // 1000M (1B) input tokens
+const EXAMPLE_OUTPUT_M = 200;  // 200M output tokens
+// At Claude Opus 4.8 rates ($5/M input, $25/M output): 1000*5 + 200*25 = $10,000
+// = 1,000,000 AI credits ($0.01 / credit) across the 100 users.
+
+// Default (non-example) seat/plan values, shared by init() and resetExample()
+// so the two stay in sync if defaults ever change.
+const DEFAULT_GH_BUSINESS_SEATS = 10;
+const DEFAULT_GH_ENTERPRISE_SEATS = 0;
+const DEFAULT_ANT_SEATS = 10;
+const DEFAULT_ANT_PLAN = '20';
+const DEFAULT_THIRD_SEATS = 10;
+
+// Flagship / top-tier model per provider used to represent "the equivalent of
+// Claude Opus 4.8" when the token-usage row belongs to a non-Anthropic provider.
+// Every provider referenced by THIRD_PARTY_COMPETITORS' modelsProvider should
+// have an entry here; a console warning is emitted otherwise (see applyExampleToThird).
+const EXAMPLE_FLAGSHIP_MODEL = {
+  anthropic: 'opus48',
+  openai:    'gpt55',
+  google:    'gemini31pro',
+  github:    'raptormini',
+  microsoft: 'maicodeflash',
+  xai:       'grok45lc',
+  moonshot:  'kimi27',
+};
+
+// Returns the "equivalent of Claude Opus 4.8" model id for a provider, falling
+// back to the provider's first listed model (with a console warning) if the
+// provider is missing from EXAMPLE_FLAGSHIP_MODEL.
+function getFlagshipModelId(provider) {
+  const mapped = EXAMPLE_FLAGSHIP_MODEL[provider];
+  if (mapped) return mapped;
+  console.warn(`EXAMPLE_FLAGSHIP_MODEL is missing an entry for provider "${provider}"; falling back to its first listed model.`);
+  const providerModels = COPILOT_MODELS[provider] || [];
+  return providerModels[0] && providerModels[0].id;
+}
+
+// Startup check: warn immediately (rather than only when that competitor is
+// selected) if a third-party competitor's provider is missing a flagship
+// model mapping above.
+Object.values(THIRD_PARTY_COMPETITORS).forEach(c => {
+  if (c.modelsProvider && !EXAMPLE_FLAGSHIP_MODEL[c.modelsProvider]) {
+    console.warn(`EXAMPLE_FLAGSHIP_MODEL is missing an entry for provider "${c.modelsProvider}" (used by "${c.name}").`);
+  }
+});
+
+let exampleActive = false;
+
+function setModelRowValues(rowEl, modelValue, { inputM, cachedM = 0, cacheWriteM = 0, outputM }) {
+  rowEl.querySelector('[data-field="model"]').value = modelValue;
+  rowEl.querySelector('[data-field="inputM"]').value = inputM;
+  rowEl.querySelector('[data-field="cachedM"]').value = cachedM;
+  const cwField = rowEl.querySelector('[data-field="cacheWriteM"]');
+  if (cwField) cwField.value = cacheWriteM;
+  rowEl.querySelector('[data-field="outputM"]').value = outputM;
+}
+
+// Appends a new GH model row seeded with a model + token usage, updating ghRowIds.
+function appendGhModelRow(modelId, tokenValues, provider = 'anthropic') {
+  const id = nextId++;
+  ghRowIds.push(id);
+  const row = buildGhModelRow(id, provider);
+  row.querySelector('[data-field="provider"]').value = provider;
+  $('ghModelRowsContainer').appendChild(row);
+  setModelRowValues(row, modelId, tokenValues);
+  return row;
+}
+
+// Appends a new Anthropic model row seeded with a model + token usage, updating antRowIds.
+function appendAntModelRow(modelId, tokenValues) {
+  const id = nextId++;
+  antRowIds.push(id);
+  const row = buildAntModelRow(id, modelId);
+  $('antModelRowsContainer').appendChild(row);
+  setModelRowValues(row, modelId, tokenValues);
+  return row;
+}
+
+// Appends a new third-party model row seeded with a model + token usage, updating thirdRowIds.
+function appendThirdModelRow(provider, modelId, tokenValues) {
+  const id = nextId++;
+  thirdRowIds.push(id);
+  const row = buildThirdModelRow(id, provider);
+  $('thirdModelRowsContainer').appendChild(row);
+  setModelRowValues(row, modelId, tokenValues);
+  return row;
+}
+
+// Seeds the default GitHub Copilot model row (Claude Sonnet 4.6). Shared by
+// init() and resetExample() so the default state stays consistent between them.
+function seedDefaultGhModelRow() {
+  const id = nextId++;
+  ghRowIds.push(id);
+  const row = buildGhModelRow(id, 'anthropic');
+  row.querySelector('[data-field="provider"]').value = 'anthropic';
+  const modelSel = row.querySelector('[data-field="model"]');
+  const sonnet46Opt = [...modelSel.options].find(o => o.value === 'sonnet46');
+  if (sonnet46Opt) sonnet46Opt.selected = true;
+  $('ghModelRowsContainer').appendChild(row);
+  return row;
+}
+
+// Seeds the default Anthropic model row (Claude Sonnet 4.5). Shared by
+// init() and resetExample() so the default state stays consistent between them.
+function seedDefaultAntModelRow() {
+  const id = nextId++;
+  antRowIds.push(id);
+  const row = buildAntModelRow(id, 'sonnet-4.5');
+  $('antModelRowsContainer').appendChild(row);
+  return row;
+}
+
+function applyExampleToGh() {
+  $('ghBusinessSeats').value = EXAMPLE_USERS;
+  $('ghEnterpriseSeats').value = DEFAULT_GH_ENTERPRISE_SEATS;
+
+  if ($('ghDirectCreditsEnabled').checked) toggleGhDirectCredits();
+  ghCreditIds = [];
+  $('ghCreditRowsContainer').innerHTML = '';
+  if ($('ghDiscountEnabled').checked) toggleDiscount('gh');
+
+  ghRowIds = [];
+  $('ghModelRowsContainer').innerHTML = '';
+  appendGhModelRow('opus48', { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
+}
+
+function applyExampleToAnt() {
+  $('antSeatUsers').value = EXAMPLE_USERS;
+  $('antIncludedCredits').value = 0;
+  if ($('antCreditsWholeAccount').checked) toggleAntCreditsMode();
+  if ($('antMirrorEnabled').checked) toggleAntMirror();
+  if ($('antDiscountEnabled').checked) toggleDiscount('ant');
+
+  antRowIds = [];
+  $('antModelRowsContainer').innerHTML = '';
+  appendAntModelRow('opus-4.8', { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
+}
+
+function applyExampleToThird() {
+  if (!exampleActive) return;
+
+  const key = $('thirdCompetitorSelect').value;
+  const competitor = THIRD_PARTY_COMPETITORS[key];
+  clearThirdModelRows();
+  if ($('thirdDiscountEnabled').checked) toggleDiscount('third');
+
+  // Always seat 100 users while the example is active, even before a
+  // competitor is selected, so seats already match the example once one is.
+  $('thirdSeatUsers').value = EXAMPLE_USERS;
+
+  if (!competitor || !competitor.modelsProvider) return;
+
+  const modelId = getFlagshipModelId(competitor.modelsProvider);
+  if (!modelId) return;
+  appendThirdModelRow(competitor.modelsProvider, modelId, { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
+}
+
+function applyExample() {
+  exampleActive = true;
+  applyExampleToGh();
+  applyExampleToAnt();
+  applyExampleToThird();
+  calculate();
+}
+
+function resetExample() {
+  exampleActive = false;
+
+  // Reset GitHub Copilot
+  $('ghBusinessSeats').value = DEFAULT_GH_BUSINESS_SEATS;
+  $('ghEnterpriseSeats').value = DEFAULT_GH_ENTERPRISE_SEATS;
+  if ($('ghDirectCreditsEnabled').checked) toggleGhDirectCredits();
+  ghCreditIds = [];
+  $('ghCreditRowsContainer').innerHTML = '';
+  if ($('ghDiscountEnabled').checked) toggleDiscount('gh');
+  ghRowIds = [];
+  $('ghModelRowsContainer').innerHTML = '';
+  seedDefaultGhModelRow();
+
+  // Reset Anthropic
+  $('antSeatUsers').value = DEFAULT_ANT_SEATS;
+  $('antSeatPlan').value = DEFAULT_ANT_PLAN;
+  $('antIncludedCredits').value = 0;
+  if ($('antCreditsWholeAccount').checked) toggleAntCreditsMode();
+  if ($('antMirrorEnabled').checked) toggleAntMirror();
+  if ($('antDiscountEnabled').checked) toggleDiscount('ant');
+  antRowIds = [];
+  $('antModelRowsContainer').innerHTML = '';
+  seedDefaultAntModelRow();
+
+  // Reset third-party competitor (rebuilds seats/plan/model row from its defaults)
+  $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
+  if ($('thirdDiscountEnabled').checked) toggleDiscount('third');
+  $('thirdCompetitorSelect').value = '';
+  onThirdCompetitorChange();
+
+  calculate();
+}
+
 function init() {
   populateThirdCompetitorOptions();
 
-  // Seed one Copilot model row (Anthropic Sonnet 4.6 as default)
-  const id1 = nextId++;
-  ghRowIds.push(id1);
-  const row1 = buildGhModelRow(id1, 'anthropic');
-  // Default to Claude Sonnet 4.6
-  const modelSel = row1.querySelector('[data-field="model"]');
-  const sonnet46Opt = [...modelSel.options].find(o => o.value === 'sonnet46');
-  if (sonnet46Opt) sonnet46Opt.selected = true;
-  $('ghModelRowsContainer').appendChild(row1);
-
-  // Seed one Anthropic model row (Sonnet 4.5 default)
-  const id2 = nextId++;
-  antRowIds.push(id2);
-  $('antModelRowsContainer').appendChild(buildAntModelRow(id2, 'sonnet-4.5'));
+  $('ghBusinessSeats').value = DEFAULT_GH_BUSINESS_SEATS;
+  $('ghEnterpriseSeats').value = DEFAULT_GH_ENTERPRISE_SEATS;
+  $('antSeatUsers').value = DEFAULT_ANT_SEATS;
+  $('antSeatPlan').value = DEFAULT_ANT_PLAN;
+  $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
+  seedDefaultGhModelRow();
+  seedDefaultAntModelRow();
 
   calculate();
 }
