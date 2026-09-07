@@ -2324,8 +2324,18 @@ const EXAMPLE_OUTPUT_M = 200;  // 200M output tokens
 // At Claude Opus 4.8 rates ($5/M input, $25/M output): 1000*5 + 200*25 = $10,000
 // = 1,000,000 AI credits ($0.01 / credit) across the 100 users.
 
+// Default (non-example) seat/plan values, shared by init() and resetExample()
+// so the two stay in sync if defaults ever change.
+const DEFAULT_GH_BUSINESS_SEATS = 10;
+const DEFAULT_GH_ENTERPRISE_SEATS = 0;
+const DEFAULT_ANT_SEATS = 10;
+const DEFAULT_ANT_PLAN = '20';
+const DEFAULT_THIRD_SEATS = 10;
+
 // Flagship / top-tier model per provider used to represent "the equivalent of
 // Claude Opus 4.8" when the token-usage row belongs to a non-Anthropic provider.
+// Every provider referenced by THIRD_PARTY_COMPETITORS' modelsProvider should
+// have an entry here; a console warning is emitted otherwise (see applyExampleToThird).
 const EXAMPLE_FLAGSHIP_MODEL = {
   anthropic: 'opus48',
   openai:    'gpt55',
@@ -2348,11 +2358,11 @@ function setModelRowValues(rowEl, modelValue, { inputM, cachedM = 0, cacheWriteM
 }
 
 // Appends a new GH model row seeded with a model + token usage, updating ghRowIds.
-function appendGhModelRow(modelId, tokenValues) {
+function appendGhModelRow(modelId, tokenValues, provider = 'anthropic') {
   const id = nextId++;
   ghRowIds.push(id);
-  const row = buildGhModelRow(id, 'anthropic');
-  row.querySelector('[data-field="provider"]').value = 'anthropic';
+  const row = buildGhModelRow(id, provider);
+  row.querySelector('[data-field="provider"]').value = provider;
   $('ghModelRowsContainer').appendChild(row);
   setModelRowValues(row, modelId, tokenValues);
   return row;
@@ -2441,6 +2451,9 @@ function applyExampleToThird() {
   clearThirdModelRows();
   const providerModels = COPILOT_MODELS[competitor.modelsProvider] || [];
   const fallbackModel = providerModels[providerModels.length - 1] || providerModels[0];
+  if (!EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider]) {
+    console.warn(`No EXAMPLE_FLAGSHIP_MODEL entry for provider "${competitor.modelsProvider}"; falling back to the last model in its list.`);
+  }
   const modelId = EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider] || (fallbackModel && fallbackModel.id);
   if (!modelId) return;
   appendThirdModelRow(competitor.modelsProvider, modelId, { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
@@ -2458,8 +2471,8 @@ function resetExample() {
   exampleActive = false;
 
   // Reset GitHub Copilot
-  $('ghBusinessSeats').value = 10;
-  $('ghEnterpriseSeats').value = 0;
+  $('ghBusinessSeats').value = DEFAULT_GH_BUSINESS_SEATS;
+  $('ghEnterpriseSeats').value = DEFAULT_GH_ENTERPRISE_SEATS;
   if ($('ghDirectCreditsEnabled').checked) toggleGhDirectCredits();
   ghCreditIds = [];
   $('ghCreditRowsContainer').innerHTML = '';
@@ -2469,8 +2482,8 @@ function resetExample() {
   seedDefaultGhModelRow();
 
   // Reset Anthropic
-  $('antSeatUsers').value = 10;
-  $('antSeatPlan').value = '20';
+  $('antSeatUsers').value = DEFAULT_ANT_SEATS;
+  $('antSeatPlan').value = DEFAULT_ANT_PLAN;
   $('antIncludedCredits').value = 0;
   if ($('antCreditsWholeAccount').checked) toggleAntCreditsMode();
   if ($('antMirrorEnabled').checked) toggleAntMirror();
@@ -2480,7 +2493,7 @@ function resetExample() {
   seedDefaultAntModelRow();
 
   // Reset third-party competitor (rebuilds seats/plan/model row from its defaults)
-  $('thirdSeatUsers').value = 10;
+  $('thirdSeatUsers').value = DEFAULT_THIRD_SEATS;
   if ($('thirdDiscountEnabled').checked) toggleDiscount('third');
   if ($('thirdCompetitorSelect').value) {
     onThirdCompetitorChange();
