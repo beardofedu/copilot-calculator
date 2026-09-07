@@ -27,6 +27,8 @@ const path = require('path');
 
 const INDEX_PATH = path.join(__dirname, '..', 'index.html');
 const FETCH_TIMEOUT_MS = 15000;
+const FETCH_RETRIES = 2;
+const FETCH_RETRY_DELAY_MS = 2000;
 // How far past a plan name's position to look for its price, in characters
 // of extracted plain text.
 const SEARCH_WINDOW = 300;
@@ -85,8 +87,8 @@ function parseCompetitors(lines) {
 // nearby prices can be matched with simple string/regex search.
 function htmlToText(html) {
   return html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script\b[^>]*>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style\b[^>]*>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
     .replace(/&amp;/gi, '&')
@@ -99,20 +101,32 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Finds the single dollar amount that appears shortly after the plan name
-// in `text`, e.g. "Teams Standard $40 per user / month" -> "40". Returns
-// undefined if the name isn't found or no price appears nearby.
-function findPriceNear(text, planName) {
-  const nameRe = new RegExp(escapeRegExp(planName), 'i');
-  const nameMatch = text.match(nameRe);
-  if (!nameMatch) return undefined;
+// Finds the single dollar amount that appears shortly after an occurrence of
+// the plan name in `text`, e.g. "Teams Standard $40 per user / month" -> "40".
+// A plan name can legitimately appear multiple times on a page (nav, table
+// of contents, comparison table, pricing card, ...), so every occurrence is
+// checked and the first one with a price nearby wins. The search window is
+// also cut short at the next occurrence of any of the vendor's *other* plan
+// names, so a price that actually belongs to a neighbouring plan can't be
+// picked up by mistake. Returns undefined if the name isn't found anywhere,
+// or no price appears near any occurrence.
+function findPriceNear(text, planName, otherPlanNames) {
+  const nameRe = new RegExp(`\\b${escapeRegExp(planName)}\\b`, 'gi');
+  const otherNameRe = otherPlanNames.length
+    ? new RegExp(`\\b(?:${otherPlanNames.map(escapeRegExp).join('|')})\\b`, 'i')
+    : null;
 
-  const start = nameMatch.index + nameMatch[0].length;
-  const window = text.slice(start, start + SEARCH_WINDOW);
-  const priceMatch = window.match(/\$\s?([0-9][0-9,]*(?:\.[0-9]+)?)/);
-  if (!priceMatch) return undefined;
-
-  return priceMatch[1].replace(/,/g, '');
+  for (const nameMatch of text.matchAll(nameRe)) {
+    const start = nameMatch.index + nameMatch[0].length;
+    let window = text.slice(start, start + SEARCH_WINDOW);
+    if (otherNameRe) {
+      const boundary = window.match(otherNameRe);
+      if (boundary) window = window.slice(0, boundary.index);
+    }
+    const priceMatch = window.match(/\$\s?([0-9][0-9,]*(?:\.[0-9]+)?)/);
+    if (priceMatch) return priceMatch[1].replace(/,/g, '');
+  }
+  return undefined;
 }
 
 function updatePlanLine(line, oldValue, newValue) {
@@ -121,17 +135,38 @@ function updatePlanLine(line, oldValue, newValue) {
 
   const valueRe = new RegExp(`(value: ')${escapeRegExp(oldValue)}(')`);
   const priceRe = new RegExp(`(\\$)${escapeRegExp(oldValue)}(/)`);
-  let updated = line.replace(valueRe, `$1${newValue}$2`);
-  updated = updated.replace(priceRe, `$1${newValue}$2`);
+  if (!valueRe.test(line) || !priceRe.test(line)) {
+    // Only apply the update when both the `value` field and the displayed
+    // `$price` can be confidently located and replaced together, so we never
+    // leave the two out of sync with each other.
+    return { line, changed: false };
+  }
+
+  const updated = line
+    .replace(valueRe, `$1${newValue}$2`)
+    .replace(priceRe, `$1${newValue}$2`);
   return { line: updated, changed: updated !== line };
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function fetchText(url) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-  if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText}`);
+  let lastErr;
+  for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      if (!res.ok) {
+        throw new Error(`${res.status} ${res.statusText}`);
+      }
+      return htmlToText(await res.text());
+    } catch (err) {
+      lastErr = err;
+      if (attempt < FETCH_RETRIES) await sleep(FETCH_RETRY_DELAY_MS);
+    }
   }
-  return htmlToText(await res.text());
+  throw lastErr;
 }
 
 async function main() {
@@ -156,8 +191,10 @@ async function main() {
       continue;
     }
 
+    const allPlanNames = vendor.plans.map(p => p.name);
     for (const plan of vendor.plans) {
-      const official = findPriceNear(text, plan.name);
+      const otherPlanNames = allPlanNames.filter(n => n !== plan.name);
+      const official = findPriceNear(text, plan.name, otherPlanNames);
       if (official === undefined) {
         warnings.push(`${vendorKey}: could not confidently find a price for "${plan.name}" on ${vendor.url}, skipped.`);
         continue;
