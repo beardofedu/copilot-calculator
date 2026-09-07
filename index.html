@@ -1524,6 +1524,7 @@ function onGhCreditProviderChange(id) {
 // ── Toggle Helpers ────────────────────────────────────────────────────────────
 
 function toggleDiscount(vendor, event) {
+  if (!['gh', 'ant', 'third'].includes(vendor)) return;
   const cb  = $(vendor + 'DiscountEnabled');
   const div = $(vendor + 'DiscountInputs');
   if (event?.target !== cb) cb.checked = !cb.checked;
@@ -2131,8 +2132,8 @@ function calculate() {
     const thirdPlanPrice = parseFloat($('thirdSeatPlan').value) || 0;
     thirdSeatCostRaw = thirdPlanPrice * thirdSeatUsers;
     const thirdSeatCost = applyDiscount(thirdSeatCostRaw, thirdSeatDiscPct);
-    const thirdPlan = thirdCompetitor.plans.find(p => p.value === String(thirdPlanPrice));
-    thirdPlanLabel = thirdPlan ? thirdPlan.label.split(' — ')[0] : '';
+    const thirdPlanOption = $('thirdSeatPlan').selectedOptions[0];
+    thirdPlanLabel = thirdPlanOption ? thirdPlanOption.textContent.split(' — ')[0] : '';
 
     $('thirdTotalSeats').textContent      = thirdSeatUsers.toLocaleString();
     $('thirdMonthlySeatCost').textContent = fmt(thirdSeatCostRaw);
