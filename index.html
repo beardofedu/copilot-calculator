@@ -18,6 +18,8 @@
       --accent-ant-light: #f59e0b;
       --accent-blue: #1f6feb;
       --accent-blue-light: #388bfd;
+      --accent-third: #8957e5;
+      --accent-third-light: #a371f7;
       --danger: #da3633;
       --radius: 8px;
     }
@@ -190,7 +192,25 @@
       grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
+    .grid-2.three-col { grid-template-columns: 1fr 1fr 1fr; }
     @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 1300px) { .grid-2.three-col { grid-template-columns: 1fr 1fr; } }
+
+    /* ── Competitor picker ──────────────────────────────────── */
+    .competitor-picker {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .competitor-picker label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .competitor-picker select { padding: 6px 10px; font-size: 13px; min-width: 220px; }
+    .competitor-picker .hint { font-size: 11px; color: var(--muted); }
 
     /* ── Card ────────────────────────────────────────────── */
     .card {
@@ -218,6 +238,8 @@
     .gh-badge { background: rgba(35,134,54,.25); color: var(--accent-gh-light); }
     .ant-header { border-top: 3px solid var(--accent-ant); }
     .ant-badge { background: rgba(217,119,6,.25); color: var(--accent-ant-light); }
+    .third-header { border-top: 3px solid var(--accent-third); }
+    .third-badge { background: rgba(137,87,229,.25); color: var(--accent-third-light); }
 
     .card-body { padding: 18px; }
 
@@ -395,7 +417,9 @@
       grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
+    .results-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
     @media (max-width: 900px) { .results-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1300px) { .results-grid.three-col { grid-template-columns: 1fr 1fr; } }
 
     .result-card {
       background: var(--surface);
@@ -413,6 +437,7 @@
     }
     .gh-result-header { background: rgba(35,134,54,.12); border-bottom: 1px solid rgba(35,134,54,.3); color: var(--accent-gh-light); }
     .ant-result-header { background: rgba(217,119,6,.12); border-bottom: 1px solid rgba(217,119,6,.3); color: var(--accent-ant-light); }
+    .third-result-header { background: rgba(137,87,229,.12); border-bottom: 1px solid rgba(137,87,229,.3); color: var(--accent-third-light); }
 
     .result-total {
       font-size: 28px;
@@ -468,6 +493,7 @@
     }
     .winner-gh { color: var(--accent-gh-light); }
     .winner-ant { color: var(--accent-ant-light); }
+    .winner-third { color: var(--accent-third-light); }
     .winner-tie { color: #79c0ff; }
     .savings-pill {
       font-size: 12px;
@@ -477,6 +503,7 @@
     }
     .savings-gh { background: rgba(35,134,54,.2); color: var(--accent-gh-light); }
     .savings-ant { background: rgba(217,119,6,.2); color: var(--accent-ant-light); }
+    .savings-third { background: rgba(137,87,229,.2); color: var(--accent-third-light); }
 
     .comparison-table { width: 100%; border-collapse: collapse; }
     .comparison-table td, .comparison-table th {
@@ -614,6 +641,19 @@
       gap: 8px;
     }
     .ant-seat-summary .stat-val { color: var(--accent-ant-light); }
+
+    /* ── Third competitor seat summary ───────────────────── */
+    .third-seat-summary {
+      background: rgba(137,87,229,.08);
+      border: 1px solid rgba(137,87,229,.25);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .third-seat-summary .stat-val { color: var(--accent-third-light); }
   </style>
 </head>
 <body>
@@ -649,8 +689,17 @@
 
 <div class="container">
 
+  <!-- ── Competitor Picker ────────────────────────────────────── -->
+  <div class="competitor-picker">
+    <label for="thirdCompetitorSelect">Add a third competitor</label>
+    <select id="thirdCompetitorSelect" onchange="onThirdCompetitorChange()">
+      <option value="">None</option>
+    </select>
+    <span class="hint">Compare GitHub Copilot and Anthropic against another AI coding assistant</span>
+  </div>
+
   <!-- ── Vendor Cards ──────────────────────────────────────── -->
-  <div class="grid-2">
+  <div class="grid-2" id="vendorGrid">
 
     <!-- ════════════════ GitHub Copilot ════════════════ -->
     <div class="card">
@@ -897,13 +946,85 @@
 
       </div>
     </div>
+
+    <!-- ════════════════ Third Competitor (optional) ════════════════ -->
+    <div class="card hidden" id="thirdCard">
+      <div class="card-header third-header">
+        <span id="thirdIcon">🧩</span>
+        <span id="thirdCardName">Competitor</span>
+        <span class="badge third-badge">Seat + API Usage</span>
+      </div>
+      <div class="card-body">
+
+        <div class="info-banner" id="thirdInfoBanner"></div>
+
+        <!-- ── Licenses & Seats ── -->
+        <div class="section-title">Licenses &amp; Seats</div>
+        <div class="inline-2">
+          <div class="field">
+            <label>Number of Users</label>
+            <input type="number" id="thirdSeatUsers" value="10" min="0" oninput="calculate()" />
+          </div>
+          <div class="field">
+            <label>Plan</label>
+            <select id="thirdSeatPlan" onchange="calculate()"></select>
+          </div>
+        </div>
+
+        <!-- Seat summary bar -->
+        <div class="third-seat-summary">
+          <div class="seat-stat">
+            <div class="stat-val" id="thirdTotalSeats">10</div>
+            <div class="stat-lbl">Total Seats</div>
+          </div>
+          <div class="seat-stat">
+            <div class="stat-val" id="thirdMonthlySeatCost">$—</div>
+            <div class="stat-lbl">Monthly Seat Cost</div>
+          </div>
+          <div class="seat-stat">
+            <div class="stat-val" id="thirdPlanName">—</div>
+            <div class="stat-lbl">Active Plan</div>
+          </div>
+        </div>
+
+        <!-- ── Optional API Token Usage ── -->
+        <div id="thirdModelSection">
+          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>API Token Usage <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></span>
+          </div>
+          <div id="thirdModelRowsContainer"></div>
+          <button class="add-model-btn" onclick="addThirdModelRow()">＋ Add another model</button>
+        </div>
+
+        <!-- ── Vendor Discount ── -->
+        <div class="section-title">Vendor Discount</div>
+        <div class="toggle-row" onclick="toggleDiscount('third', event)">
+          <input type="checkbox" id="thirdDiscountEnabled" />
+          <div>
+            <div class="toggle-label">Apply Discount</div>
+            <div class="toggle-desc">Reduces both seat cost and token rates</div>
+          </div>
+        </div>
+        <div class="discount-inputs hidden" id="thirdDiscountInputs">
+          <div class="field pct-field">
+            <label>Seat Cost Discount</label>
+            <input type="number" id="thirdSeatDiscount" value="10" min="0" max="100" oninput="calculate()" />
+          </div>
+          <div class="field pct-field">
+            <label>Token Rate Discount</label>
+            <input type="number" id="thirdTokenDiscount" value="10" min="0" max="100" oninput="calculate()" />
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <!-- ── Results ─────────────────────────────────────────────── -->
   <div class="results-section">
     <div class="section-title" style="margin-top:0">Monthly Cost Breakdown</div>
 
-    <div class="results-grid">
+    <div class="results-grid" id="resultsGrid">
       <div class="result-card">
         <div class="result-header gh-result-header">
           <span>GitHub Copilot</span>
@@ -920,6 +1041,14 @@
         <div class="result-total" id="antTotal">$—</div>
         <div class="result-breakdown" id="antBreakdown"></div>
       </div>
+      <div class="result-card hidden" id="thirdResultCard">
+        <div class="result-header third-result-header">
+          <span id="thirdResultName">Competitor</span>
+          <span id="thirdModelTag" style="font-size:12px;font-weight:400;color:var(--muted)"></span>
+        </div>
+        <div class="result-total" id="thirdTotal">$—</div>
+        <div class="result-breakdown" id="thirdBreakdown"></div>
+      </div>
     </div>
 
     <div class="summary-card">
@@ -931,6 +1060,7 @@
             <th>Cost Component</th>
             <th>GitHub Copilot</th>
             <th>Anthropic API</th>
+            <th class="hidden" id="thirdColHeader">Competitor</th>
           </tr>
         </thead>
         <tbody id="comparisonRows"></tbody>
@@ -1067,11 +1197,66 @@ const GH_TO_ANT_MAP = {
   kimi27:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
 };
 
+// ── Third-party competitors ──────────────────────────────────────────────────
+// Seat-based pricing for a selectable "third competitor" column. Optional API
+// token usage (where the vendor exposes per-token API pricing) reuses the
+// COPILOT_MODELS provider tables above via `modelsProvider`.
+const THIRD_PARTY_COMPETITORS = {
+  cursor: {
+    name: 'Cursor',
+    icon: '⌨️',
+    infoBanner: 'Cursor is an AI-first code editor with a <strong>seat-based pricing model</strong> that includes a monthly usage credit pool. Additional usage beyond the plan\'s pool is billed as overage.',
+    modelsProvider: null,
+    plans: [
+      { value: '0',   label: 'Hobby — $0/user/month' },
+      { value: '20',  label: 'Pro — $20/user/month' },
+      { value: '40',  label: 'Teams Standard — $40/user/month', selected: true },
+      { value: '120', label: 'Teams Premium — $120/user/month' },
+    ],
+    source: { text: 'Cursor pricing', url: 'https://cursor.com/pricing' },
+  },
+  amazonq: {
+    name: 'Amazon Q Developer',
+    icon: '🅰️',
+    infoBanner: 'Amazon Q Developer uses a <strong>seat-based pricing model</strong>. The Pro tier includes higher usage limits than the Free tier; overage for large code transformations is billed separately.',
+    modelsProvider: null,
+    plans: [
+      { value: '0',  label: 'Free — $0/user/month' },
+      { value: '19', label: 'Pro — $19/user/month', selected: true },
+    ],
+    source: { text: 'Amazon Q Developer pricing', url: 'https://aws.amazon.com/q/developer/pricing/' },
+  },
+  gemini: {
+    name: 'Google Gemini Code Assist',
+    icon: '✨',
+    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong> (annual commitment pricing shown). Optional direct Gemini API usage can be added below using standard per-token rates.',
+    modelsProvider: 'google',
+    plans: [
+      { value: '19', label: 'Standard — $19/user/month', selected: true },
+      { value: '45', label: 'Enterprise — $45/user/month' },
+    ],
+    source: { text: 'Gemini Code Assist pricing', url: 'https://cloud.google.com/products/gemini/pricing' },
+  },
+  chatgpt: {
+    name: 'OpenAI ChatGPT',
+    icon: '🤖',
+    infoBanner: 'ChatGPT Business/Enterprise uses a <strong>seat-based pricing model</strong>. Optional direct OpenAI API usage can be added below using standard per-token rates.',
+    modelsProvider: 'openai',
+    plans: [
+      { value: '25',  label: 'Business Standard — $25/user/month', selected: true },
+      { value: '125', label: 'Business Premium — $125/user/month' },
+      { value: '60',  label: 'Enterprise (est.) — $60/user/month' },
+    ],
+    source: { text: 'OpenAI ChatGPT pricing', url: 'https://openai.com/chatgpt/pricing/' },
+  },
+};
+
 // ── Row ID counters ──────────────────────────────────────────────────────────
 
 let ghRowIds      = [];
 let ghCreditIds   = [];
 let antRowIds     = [];
+let thirdRowIds   = [];
 let nextId        = 1;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1210,6 +1395,42 @@ function buildAntModelRow(id, defaultModel = 'sonnet-4.5') {
   return el;
 }
 
+function buildThirdModelRow(id, provider) {
+  const models = COPILOT_MODELS[provider] || [];
+  const defaultModelId = models.length ? models[0].id : '';
+  const el = document.createElement('div');
+  el.className = 'model-row';
+  el.id = 'thirdrow-' + id;
+  el.innerHTML = `
+    <div class="model-row-header">
+      <select style="flex:1" data-field="model" data-provider="${provider}" onchange="calculate()">
+        ${modelOptionsHTML(provider)}
+      </select>
+    <i class="tt-icon" onmouseenter="showModelTT(this,'third',${id})" onmouseleave="scheduleTTHide()" title="View pricing details">ⓘ</i>
+    <button class="remove-btn" onclick="removeThirdModelRow(${id})" title="Remove row">×</button>
+  </div>
+    <div class="model-row-inputs">
+      <div class="field">
+        <label>Input Tokens (M)</label>
+        <input type="number" data-field="inputM" value="5" min="0" step="0.1" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Cached Input (M)</label>
+        <input type="number" data-field="cachedM" value="1" min="0" step="0.1" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Cache Write (M)</label>
+        <input type="number" data-field="cacheWriteM" value="0.5" min="0" step="0.1" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Output Tokens (M)</label>
+        <input type="number" data-field="outputM" value="2" min="0" step="0.1" oninput="calculate()" />
+      </div>
+    </div>
+    <div class="model-row-cost" id="thirdrow-${id}-cost">—</div>`;
+  return el;
+}
+
 // ── Row Management ────────────────────────────────────────────────────────────
 
 function addGhModelRow() {
@@ -1258,6 +1479,28 @@ function removeAntModelRow(id) {
   calculate();
 }
 
+function addThirdModelRow() {
+  const competitorKey = $('thirdCompetitorSelect').value;
+  const competitor = THIRD_PARTY_COMPETITORS[competitorKey];
+  if (!competitor || !competitor.modelsProvider) return;
+  const id = nextId++;
+  thirdRowIds.push(id);
+  $('thirdModelRowsContainer').appendChild(buildThirdModelRow(id, competitor.modelsProvider));
+  calculate();
+}
+
+function removeThirdModelRow(id) {
+  thirdRowIds = thirdRowIds.filter(i => i !== id);
+  const el = $('thirdrow-' + id);
+  if (el) el.remove();
+  calculate();
+}
+
+function clearThirdModelRows() {
+  thirdRowIds = [];
+  $('thirdModelRowsContainer').innerHTML = '';
+}
+
 // ── Provider Change Handlers ──────────────────────────────────────────────────
 
 function onGhProviderChange(id) {
@@ -1281,10 +1524,61 @@ function onGhCreditProviderChange(id) {
 // ── Toggle Helpers ────────────────────────────────────────────────────────────
 
 function toggleDiscount(vendor, event) {
-  const cb  = $(vendor === 'gh' ? 'ghDiscountEnabled' : 'antDiscountEnabled');
-  const div = $(vendor === 'gh' ? 'ghDiscountInputs'  : 'antDiscountInputs');
+  const cb  = $(vendor + 'DiscountEnabled');
+  const div = $(vendor + 'DiscountInputs');
   if (event?.target !== cb) cb.checked = !cb.checked;
   div.classList.toggle('hidden', !cb.checked);
+  calculate();
+}
+
+// ── Third Competitor Selection ───────────────────────────────────────────────
+
+function populateThirdCompetitorOptions() {
+  const sel = $('thirdCompetitorSelect');
+  Object.entries(THIRD_PARTY_COMPETITORS).forEach(([key, c]) => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+}
+
+function onThirdCompetitorChange() {
+  const key = $('thirdCompetitorSelect').value;
+  const card = $('thirdCard');
+  const competitor = THIRD_PARTY_COMPETITORS[key];
+
+  $('vendorGrid').classList.toggle('three-col', !!competitor);
+  $('resultsGrid').classList.toggle('three-col', !!competitor);
+  $('thirdResultCard').classList.toggle('hidden', !competitor);
+  $('thirdColHeader').classList.toggle('hidden', !competitor);
+  card.classList.toggle('hidden', !competitor);
+
+  clearThirdModelRows();
+
+  if (!competitor) {
+    calculate();
+    return;
+  }
+
+  $('thirdIcon').textContent      = competitor.icon;
+  $('thirdCardName').textContent  = competitor.name;
+  $('thirdResultName').textContent = competitor.name;
+  $('thirdColHeader').textContent  = competitor.name;
+  $('thirdInfoBanner').innerHTML   = competitor.infoBanner;
+
+  const planSel = $('thirdSeatPlan');
+  planSel.innerHTML = competitor.plans.map(p =>
+    `<option value="${p.value}" ${p.selected ? 'selected' : ''}>${p.label}</option>`
+  ).join('');
+
+  $('thirdModelSection').classList.toggle('hidden', !competitor.modelsProvider);
+  if (competitor.modelsProvider) {
+    const id = nextId++;
+    thirdRowIds.push(id);
+    $('thirdModelRowsContainer').appendChild(buildThirdModelRow(id, competitor.modelsProvider));
+  }
+
   calculate();
 }
 
@@ -1398,6 +1692,14 @@ function showModelTT(triggerEl, vendor, rowId) {
     model = COPILOT_MODELS[provider].find(m => m.id === modelId);
     sourceText = 'GitHub Copilot billing docs';
     sourceUrl  = GH_DOCS_URL;
+  } else if (vendor === 'third') {
+    const rowEl = $('thirdrow-' + rowId);
+    if (!rowEl) return;
+    const modelSel = rowEl.querySelector('[data-field="model"]');
+    const provider = modelSel.dataset.provider;
+    model = COPILOT_MODELS[provider].find(m => m.id === modelSel.value);
+    sourceText = 'GitHub Copilot billing docs';
+    sourceUrl  = GH_DOCS_URL;
   } else {
     const rowEl = $('antrow-' + rowId);
     if (!rowEl) return;
@@ -1492,6 +1794,22 @@ function readAntModelRows() {
     const cacheWriteM = parseFloat(el.querySelector('[data-field="cacheWriteM"]').value) || 0;
     const outputM     = parseFloat(el.querySelector('[data-field="outputM"]').value)     || 0;
     const model       = ANTHROPIC_MODELS[modelKey];
+    return { id, model, inputM, cachedM, cacheWriteM, outputM };
+  }).filter(Boolean);
+}
+
+function readThirdModelRows() {
+  return thirdRowIds.map(id => {
+    const el = $('thirdrow-' + id);
+    if (!el) return null;
+    const modelSel    = el.querySelector('[data-field="model"]');
+    const provider    = modelSel.dataset.provider;
+    const inputM      = parseFloat(el.querySelector('[data-field="inputM"]').value)      || 0;
+    const cachedM     = parseFloat(el.querySelector('[data-field="cachedM"]').value)     || 0;
+    const cacheWriteM = parseFloat(el.querySelector('[data-field="cacheWriteM"]').value) || 0;
+    const outputM     = parseFloat(el.querySelector('[data-field="outputM"]').value)     || 0;
+    const models      = COPILOT_MODELS[provider] || [];
+    const model       = models.find(m => m.id === modelSel.value) || models[0];
     return { id, model, inputM, cachedM, cacheWriteM, outputM };
   }).filter(Boolean);
 }
@@ -1798,56 +2116,142 @@ function calculate() {
   $('antBreakdown').innerHTML = antHTML;
   $('antTotal').textContent   = fmt(antTotal);
 
-  // ── Summary ────────────────────────────────────────────────
-  const diff = Math.abs(ghTotal - antTotal);
-  const pct  = Math.max(ghTotal, antTotal) > 0
-    ? (diff / Math.max(ghTotal, antTotal) * 100).toFixed(1) : '0';
-  const winBanner = $('winnerBanner');
+  // ── Third Competitor (optional) ─────────────────────────────
+  const thirdKey        = $('thirdCompetitorSelect').value;
+  const thirdCompetitor = THIRD_PARTY_COMPETITORS[thirdKey];
+  let thirdTotal = 0, thirdSeatCostRaw = 0, thirdSeatUsers = 0, thirdPlanLabel = '';
 
-  if (diff < 0.005) {
-    winBanner.innerHTML = `<span class="winner-tie">🤝 Roughly equal cost — ${fmt(ghTotal)}/month each</span>`;
-  } else if (ghTotal < antTotal) {
-    winBanner.innerHTML = `<span class="winner-gh">✅ GitHub Copilot is cheaper by ${fmt(diff)} (${pct}%)</span>
-      <span class="savings-pill savings-gh">Save ${fmt(diff)}/mo</span>`;
-  } else {
-    winBanner.innerHTML = `<span class="winner-ant">✅ Anthropic API is cheaper by ${fmt(diff)} (${pct}%)</span>
-      <span class="savings-pill savings-ant">Save ${fmt(diff)}/mo</span>`;
+  if (thirdCompetitor) {
+    const thirdSeatDiscPct  = $('thirdDiscountEnabled').checked ? (parseFloat($('thirdSeatDiscount').value)  || 0) : 0;
+    const thirdTokenDiscPct = $('thirdDiscountEnabled').checked ? (parseFloat($('thirdTokenDiscount').value) || 0) : 0;
+
+    thirdSeatUsers = Math.max(0, parseInt($('thirdSeatUsers').value) || 0);
+    const thirdPlanPrice = parseFloat($('thirdSeatPlan').value) || 0;
+    thirdSeatCostRaw = thirdPlanPrice * thirdSeatUsers;
+    const thirdSeatCost = applyDiscount(thirdSeatCostRaw, thirdSeatDiscPct);
+    const thirdPlan = thirdCompetitor.plans.find(p => p.value === String(thirdPlanPrice));
+    thirdPlanLabel = thirdPlan ? thirdPlan.label.split(' — ')[0] : '';
+
+    $('thirdTotalSeats').textContent      = thirdSeatUsers.toLocaleString();
+    $('thirdMonthlySeatCost').textContent = fmt(thirdSeatCostRaw);
+    $('thirdPlanName').textContent        = thirdPlanLabel || '—';
+
+    let thirdTokenTotal = 0;
+    const thirdModelSummaries = [];
+    readThirdModelRows().forEach(r => {
+      const inputCost      = applyDiscount(r.inputM      * r.model.input, thirdTokenDiscPct);
+      const cachedCost     = applyDiscount(r.cachedM     * r.model.cachedInput, thirdTokenDiscPct);
+      const cacheWriteCost = r.model.cacheWrite
+        ? applyDiscount(r.cacheWriteM * r.model.cacheWrite, thirdTokenDiscPct)
+        : 0;
+      const outputCost     = applyDiscount(r.outputM     * r.model.output, thirdTokenDiscPct);
+      const rowTotal       = inputCost + cachedCost + cacheWriteCost + outputCost;
+      thirdTokenTotal += rowTotal;
+      thirdModelSummaries.push({ label: r.model.label, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal });
+
+      const costEl = $('thirdrow-' + r.id + '-cost');
+      if (costEl) {
+        costEl.innerHTML = `
+          <span class="cost-item">In: ${fmt(inputCost)}</span>
+          <span class="cost-item">Cached: ${fmt(cachedCost)}</span>
+          ${r.model.cacheWrite ? `<span class="cost-item">CW: ${fmt(cacheWriteCost)}</span>` : ''}
+          <span class="cost-item">Out: ${fmt(outputCost)}</span>
+          <span class="cost-total">${fmt(rowTotal)}</span>`;
+      }
+    });
+
+    thirdTotal = thirdSeatCost + thirdTokenTotal;
+
+    $('thirdModelTag').textContent = thirdModelSummaries.map(s => s.label).join(', ').substring(0, 60);
+
+    let thirdHTML = '';
+    thirdHTML += brow(`Seat cost — ${thirdPlanLabel} (${thirdSeatUsers} × ${fmt(thirdPlanPrice)})`, fmt(thirdSeatCostRaw));
+    if (thirdSeatDiscPct > 0)
+      thirdHTML += brow(`Seat discount (${thirdSeatDiscPct}%)`, '−' + fmt(thirdSeatCostRaw - thirdSeatCost), 'discount-row');
+    thirdHTML += brow('Net seat cost', fmt(thirdSeatCost));
+    if (thirdModelSummaries.length) {
+      thirdHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
+      thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">API Token Usage</div>`;
+      thirdModelSummaries.forEach(s => {
+        thirdHTML += brow(s.label, fmt(s.rowTotal));
+        thirdHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}  CW: ${fmt(s.cacheWriteCost)}  Out: ${fmt(s.outputCost)}`, '', '');
+      });
+      if (thirdTokenDiscPct > 0)
+        thirdHTML += brow(`Token rate discount (${thirdTokenDiscPct}%)`, '✓', 'discount-row');
+      thirdHTML += brow('Token subtotal', fmt(thirdTokenTotal));
+    }
+    thirdHTML += brow('Monthly Total', fmt(thirdTotal), 'total-row');
+
+    $('thirdBreakdown').innerHTML = thirdHTML;
+    $('thirdTotal').textContent   = fmt(thirdTotal);
   }
 
-  const ghClass  = ghTotal  <= antTotal ? 'lower' : 'higher';
-  const antClass = antTotal <= ghTotal  ? 'lower' : 'higher';
+  // ── Summary ────────────────────────────────────────────────
+  const entries = [
+    { key: 'gh',   label: 'GitHub Copilot',     total: ghTotal,  winnerCls: 'winner-gh',    savingsCls: 'savings-gh' },
+    { key: 'ant',  label: 'Anthropic Claude.ai', total: antTotal, winnerCls: 'winner-ant',   savingsCls: 'savings-ant' },
+  ];
+  if (thirdCompetitor)
+    entries.push({ key: 'third', label: thirdCompetitor.name, total: thirdTotal, winnerCls: 'winner-third', savingsCls: 'savings-third' });
+
+  const minTotal = Math.min(...entries.map(e => e.total));
+  const maxTotal = Math.max(...entries.map(e => e.total));
+  const cheapest = entries.filter(e => Math.abs(e.total - minTotal) < 0.005);
+  const winBanner = $('winnerBanner');
+
+  if (maxTotal - minTotal < 0.005) {
+    winBanner.innerHTML = `<span class="winner-tie">🤝 Roughly equal cost — ${fmt(minTotal)}/month each</span>`;
+  } else {
+    const winner = cheapest[0];
+    const runnerUpTotal = Math.min(...entries.filter(e => e.key !== winner.key).map(e => e.total));
+    const diff = runnerUpTotal - winner.total;
+    const pct  = maxTotal > 0 ? (diff / maxTotal * 100).toFixed(1) : '0';
+    winBanner.innerHTML = `<span class="${winner.winnerCls}">✅ ${winner.label} is cheaper by ${fmt(diff)} (${pct}%)</span>
+      <span class="savings-pill ${winner.savingsCls}">Save ${fmt(diff)}/mo</span>`;
+  }
+
+  const ghClass    = ghTotal    <= minTotal + 0.005 ? 'lower' : 'higher';
+  const antClass   = antTotal   <= minTotal + 0.005 ? 'lower' : 'higher';
+  const thirdClass = thirdTotal <= minTotal + 0.005 ? 'lower' : 'higher';
 
   $('comparisonRows').innerHTML = `
     <tr>
       <td>Seats (raw cost)</td>
       <td>${fmt(rawSeatCost)} (${totalSeats} seats)</td>
       <td>${fmt(antSeatCostRaw)} (${antSeatUsers} × ${antPlanLabel})</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? fmt(thirdSeatCostRaw) + ` (${thirdSeatUsers} × ${thirdPlanLabel})` : ''}</td>
     </tr>
     <tr>
       <td>AI credits / API usage</td>
       <td>${fmt(includedCredits * 0.01)} (${fmtCred(includedCredits)} credits)</td>
       <td>${antPurchasedCreditValue > 0 ? fmt(antPurchasedCreditValue) + ' purchased' : 'No credits purchased'}</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? 'n/a — seat-based only' : ''}</td>
     </tr>
     <tr>
       <td>Token / API costs</td>
       <td>${fmt(overageCost)} overage</td>
       <td>${antPurchasedCreditValue > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
+      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? fmt(thirdTotal - thirdSeatCostRaw) : ''}</td>
     </tr>
     <tr>
       <td><strong>Total / month</strong></td>
       <td class="${ghClass}"><strong>${fmt(ghTotal)}</strong></td>
       <td class="${antClass}"><strong>${fmt(antTotal)}</strong></td>
+      <td class="${thirdCompetitor ? thirdClass : 'hidden'}"><strong>${thirdCompetitor ? fmt(thirdTotal) : ''}</strong></td>
     </tr>
     <tr>
       <td><strong>Total / year</strong></td>
       <td class="${ghClass}"><strong>${fmt(ghTotal * 12)}</strong></td>
       <td class="${antClass}"><strong>${fmt(antTotal * 12)}</strong></td>
+      <td class="${thirdCompetitor ? thirdClass : 'hidden'}"><strong>${thirdCompetitor ? fmt(thirdTotal * 12) : ''}</strong></td>
     </tr>`;
 }
 
 // ── Initialisation ────────────────────────────────────────────────────────────
 
 function init() {
+  populateThirdCompetitorOptions();
+
   // Seed one Copilot model row (Anthropic Sonnet 4.6 as default)
   const id1 = nextId++;
   ghRowIds.push(id1);
