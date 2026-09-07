@@ -1275,7 +1275,7 @@ const THIRD_PARTY_COMPETITORS = {
   cursor: {
     name: 'Cursor',
     icon: '⌨️',
-    infoBanner: 'Cursor is an AI-first code editor with a <strong>seat-based pricing model</strong> that includes a monthly usage credit pool. Additional usage beyond the plan\'s pool is billed as overage.',
+    infoBanner: 'Cursor is an AI-first code editor with a <strong>seat-based pricing model</strong>. The calculator models the published seat price and any direct API usage below, but does not assume a separate AI-credit pool or vendor-specific overage rules unless the vendor publishes them explicitly.',
     modelsProvider: null,
     plans: [
       { value: '0',   name: 'Hobby',          label: 'Hobby — $0/user/month' },
@@ -1288,7 +1288,7 @@ const THIRD_PARTY_COMPETITORS = {
   amazonq: {
     name: 'Amazon Q Developer',
     icon: '🅰️',
-    infoBanner: 'Amazon Q Developer uses a <strong>seat-based pricing model</strong>. The Pro tier includes higher usage limits than the Free tier; overage for large code transformations is billed separately.',
+    infoBanner: 'Amazon Q Developer uses a <strong>seat-based pricing model</strong>. The calculator includes the published seat price and optional API usage below, but does not model usage credits or overage rules that are not explicitly published by the vendor.',
     modelsProvider: null,
     plans: [
       { value: '0',  name: 'Free', label: 'Free — $0/user/month' },
@@ -1299,7 +1299,7 @@ const THIRD_PARTY_COMPETITORS = {
   gemini: {
     name: 'Google Gemini Code Assist',
     icon: '✨',
-    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong> (annual commitment pricing shown). Optional direct Gemini API usage can be added below using standard per-token rates.',
+    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong>. Optional direct Gemini API usage can be added below using standard per-token rates; the calculator does not assume a separate AI-credit pool.',
     modelsProvider: 'google',
     plans: [
       { value: '19', name: 'Standard',   label: 'Standard — $19/user/month', selected: true },
@@ -1310,7 +1310,7 @@ const THIRD_PARTY_COMPETITORS = {
   chatgpt: {
     name: 'OpenAI ChatGPT',
     icon: '🤖',
-    infoBanner: 'ChatGPT Business/Enterprise uses a <strong>seat-based pricing model</strong>. Optional direct OpenAI API usage can be added below using standard per-token rates.',
+    infoBanner: 'ChatGPT Business/Enterprise uses a <strong>seat-based pricing model</strong>. Optional direct OpenAI API usage can be added below using standard per-token rates; the calculator does not assume a separate AI-credit pool.',
     modelsProvider: 'openai',
     plans: [
       { value: '25',  name: 'Business Standard',    label: 'Business Standard — $25/user/month', selected: true },

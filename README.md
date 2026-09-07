@@ -45,7 +45,7 @@ The **Monthly Cost Breakdown** section shows a full line-item breakdown for each
 - Code completions on GitHub Copilot are **unlimited** and do not consume AI credits — this calculator only covers token-based model usage and seat costs.
 - The **"Assume same usage"** mirror mode on the Anthropic side maps Copilot model tiers to roughly equivalent Anthropic models. It is an illustrative estimate only — model quality, latency, context windows, and capabilities differ meaningfully.
 - Claude.ai plans do not include a fixed API-token credit pool. Optional usage credits are purchased separately and API usage is billed at standard Anthropic rates.
-- The optional third competitor (Cursor, Amazon Q Developer, Google Gemini Code Assist, or OpenAI ChatGPT) uses publicly listed seat pricing at the time it was added and does not model every plan detail (e.g. included usage credit pools, overage rules). Verify current pricing directly with each vendor before making purchasing decisions.
+- The optional third competitor (Cursor, Amazon Q Developer, Google Gemini Code Assist, or OpenAI ChatGPT) uses publicly listed seat pricing at the time it was added and does not model every plan detail (e.g. usage caps, overage rules, or AI-credit pools that are not explicitly published). Verify current pricing directly with each vendor before making purchasing decisions.
 
 ---
 
