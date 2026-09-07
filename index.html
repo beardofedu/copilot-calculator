@@ -2257,13 +2257,13 @@ function calculate() {
     thirdHTML += brow('Net seat cost', fmt(thirdSeatCost));
     if (thirdModelSummaries.length || thirdCreditSummaries.length) {
       thirdHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
-        thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">${thirdMirrorOn ? 'Estimated API Token Usage (mirrored)' : 'API Token Usage'}</div>`;
+      thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">${thirdMirrorOn ? 'Estimated API Token Usage (mirrored)' : 'API Token Usage'}</div>`;
       thirdModelSummaries.forEach(s => {
-          thirdHTML += brow(s.label + (thirdMirrorOn ? ` <span style="color:var(--muted);font-size:11px">(from Copilot)</span>` : ''), fmt(s.rowTotal));
+        thirdHTML += brow(s.label + (thirdMirrorOn ? ` <span style="color:var(--muted);font-size:11px">(from Copilot)</span>` : ''), fmt(s.rowTotal));
         thirdHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}${s.hasCacheWrite ? `  CW: ${fmt(s.cacheWriteCost)}` : ''}  Out: ${fmt(s.outputCost)}`, '', '');
       });
       thirdCreditSummaries.forEach(s => {
-          thirdHTML += brow(s.label + ' <span style="color:var(--muted);font-size:11px">(credit proxy from Copilot)</span>', fmt(s.rowTotal));
+        thirdHTML += brow(s.label + ' <span style="color:var(--muted);font-size:11px">(credit proxy from Copilot)</span>', fmt(s.rowTotal));
       });
       if (thirdTokenDiscPct > 0)
         thirdHTML += brow(`Token rate discount (${thirdTokenDiscPct}%)`, '✓', 'discount-row');
