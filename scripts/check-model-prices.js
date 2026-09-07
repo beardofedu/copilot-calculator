@@ -43,7 +43,7 @@ const MODEL_MAP = [
   { ids: ['sonnet46', 'sonnet-4.6'],     docLabel: 'Claude Sonnet 4.6' },
   { ids: ['opus47', 'opus-4.7'],         docLabel: 'Claude Opus 4.7' },
   { ids: ['opus48', 'opus-4.8'],         docLabel: 'Claude Opus 4.8' },
-  { ids: ['opus48fast', 'opus-4.8-fast'],docLabel: 'Claude Opus 4.8 (fast mode)' },
+  { ids: ['opus48fast', 'opus-4.8-fast'],docLabel: 'Claude Opus 4.8 (fast mode) (preview)' },
   { ids: ['opus5', 'opus-5'],            docLabel: 'Claude Opus 5' },
   { ids: ['sonnet5', 'sonnet-5'],        docLabel: 'Claude Sonnet 5' },
   { ids: ['fable5', 'fable-5'],          docLabel: 'Claude Fable 5' },
@@ -165,6 +165,13 @@ async function main() {
   }
   const markdown = await res.text();
   const docPrices = buildDocPriceIndex(markdown);
+
+  for (const entry of MODEL_MAP) {
+    const key = entry.docLabel + '|' + (entry.tier || '');
+    if (!docPrices.has(key)) {
+      console.warn(`Warning: no match found in official docs for "${entry.docLabel}"${entry.tier ? ` (${entry.tier})` : ''} (ids: ${entry.ids.join(', ')}). This entry was not checked.`);
+    }
+  }
 
   const original = fs.readFileSync(INDEX_PATH, 'utf8');
   const lines = original.split('\n');
