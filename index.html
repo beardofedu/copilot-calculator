@@ -2319,7 +2319,7 @@ function calculate() {
 // ── 1M Credits Example ────────────────────────────────────────────────────────
 
 const EXAMPLE_USERS   = 100;
-const EXAMPLE_INPUT_M  = 1000; // 1B input tokens
+const EXAMPLE_INPUT_M  = 1000; // 1000M (1B) input tokens
 const EXAMPLE_OUTPUT_M = 200;  // 200M output tokens
 // At Claude Opus 4.8 rates ($5/M input, $25/M output): 1000*5 + 200*25 = $10,000
 // = 1,000,000 AI credits ($0.01 / credit) across the 100 users.
@@ -2345,6 +2345,30 @@ function setModelRowValues(rowEl, modelValue, { inputM, cachedM = 0, cacheWriteM
   const cwField = rowEl.querySelector('[data-field="cacheWriteM"]');
   if (cwField) cwField.value = cacheWriteM;
   rowEl.querySelector('[data-field="outputM"]').value = outputM;
+}
+
+// Seeds the default GitHub Copilot model row (Claude Sonnet 4.6). Shared by
+// init() and resetExample() so the default state stays consistent between them.
+function seedDefaultGhModelRow() {
+  const id = nextId++;
+  ghRowIds.push(id);
+  const row = buildGhModelRow(id, 'anthropic');
+  row.querySelector('[data-field="provider"]').value = 'anthropic';
+  const modelSel = row.querySelector('[data-field="model"]');
+  const sonnet46Opt = [...modelSel.options].find(o => o.value === 'sonnet46');
+  if (sonnet46Opt) sonnet46Opt.selected = true;
+  $('ghModelRowsContainer').appendChild(row);
+  return row;
+}
+
+// Seeds the default Anthropic model row (Claude Sonnet 4.5). Shared by
+// init() and resetExample() so the default state stays consistent between them.
+function seedDefaultAntModelRow() {
+  const id = nextId++;
+  antRowIds.push(id);
+  const row = buildAntModelRow(id, 'sonnet-4.5');
+  $('antModelRowsContainer').appendChild(row);
+  return row;
 }
 
 function applyExampleToGh() {
@@ -2395,8 +2419,9 @@ function applyExampleToThird() {
   const row = buildThirdModelRow(id, competitor.modelsProvider);
   $('thirdModelRowsContainer').appendChild(row);
   const providerModels = COPILOT_MODELS[competitor.modelsProvider] || [];
-  const modelId = EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider] ||
-    (providerModels[providerModels.length - 1] || providerModels[0]).id;
+  const fallbackModel = providerModels[providerModels.length - 1] || providerModels[0];
+  const modelId = EXAMPLE_FLAGSHIP_MODEL[competitor.modelsProvider] || (fallbackModel && fallbackModel.id);
+  if (!modelId) return;
   setModelRowValues(row, modelId, { inputM: EXAMPLE_INPUT_M, outputM: EXAMPLE_OUTPUT_M });
 }
 
@@ -2420,14 +2445,7 @@ function resetExample() {
   if ($('ghDiscountEnabled').checked) toggleDiscount('gh');
   ghRowIds = [];
   $('ghModelRowsContainer').innerHTML = '';
-  const ghId = nextId++;
-  ghRowIds.push(ghId);
-  const ghRow = buildGhModelRow(ghId, 'anthropic');
-  ghRow.querySelector('[data-field="provider"]').value = 'anthropic';
-  const ghModelSel = ghRow.querySelector('[data-field="model"]');
-  const sonnet46Opt = [...ghModelSel.options].find(o => o.value === 'sonnet46');
-  if (sonnet46Opt) sonnet46Opt.selected = true;
-  $('ghModelRowsContainer').appendChild(ghRow);
+  seedDefaultGhModelRow();
 
   // Reset Anthropic
   $('antSeatUsers').value = 10;
@@ -2438,9 +2456,7 @@ function resetExample() {
   if ($('antDiscountEnabled').checked) toggleDiscount('ant');
   antRowIds = [];
   $('antModelRowsContainer').innerHTML = '';
-  const antId = nextId++;
-  antRowIds.push(antId);
-  $('antModelRowsContainer').appendChild(buildAntModelRow(antId, 'sonnet-4.5'));
+  seedDefaultAntModelRow();
 
   // Reset third-party competitor (rebuilds seats/plan/model row from its defaults)
   $('thirdSeatUsers').value = 10;
@@ -2453,21 +2469,8 @@ function resetExample() {
 function init() {
   populateThirdCompetitorOptions();
 
-  // Seed one Copilot model row (Anthropic Sonnet 4.6 as default)
-  const id1 = nextId++;
-  ghRowIds.push(id1);
-  const row1 = buildGhModelRow(id1, 'anthropic');
-  row1.querySelector('[data-field="provider"]').value = 'anthropic';
-  // Default to Claude Sonnet 4.6
-  const modelSel = row1.querySelector('[data-field="model"]');
-  const sonnet46Opt = [...modelSel.options].find(o => o.value === 'sonnet46');
-  if (sonnet46Opt) sonnet46Opt.selected = true;
-  $('ghModelRowsContainer').appendChild(row1);
-
-  // Seed one Anthropic model row (Sonnet 4.5 default)
-  const id2 = nextId++;
-  antRowIds.push(id2);
-  $('antModelRowsContainer').appendChild(buildAntModelRow(id2, 'sonnet-4.5'));
+  seedDefaultGhModelRow();
+  seedDefaultAntModelRow();
 
   calculate();
 }
