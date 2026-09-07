@@ -133,8 +133,12 @@ function updatePlanLine(line, oldValue, newValue) {
   if (newValue === undefined) return { line, changed: false };
   if (parseFloat(newValue) === parseFloat(oldValue)) return { line, changed: false };
 
+  // Both regexes assume `oldValue` appears at most once in each of these two
+  // positions on the line, which holds for the current `{ value: '...', ...,
+  // label: '... — $...' }` plan line format produced by parseCompetitors().
+  // If that format ever changes, these should be revisited.
   const valueRe = new RegExp(`(value: ')${escapeRegExp(oldValue)}(')`);
-  const priceRe = new RegExp(`(\\$)${escapeRegExp(oldValue)}(/)`);
+  const priceRe = new RegExp(`(\\$)${escapeRegExp(oldValue)}(?=\\D|$)`);
   if (!valueRe.test(line) || !priceRe.test(line)) {
     // Only apply the update when both the `value` field and the displayed
     // `$price` can be confidently located and replaced together, so we never
@@ -144,7 +148,7 @@ function updatePlanLine(line, oldValue, newValue) {
 
   const updated = line
     .replace(valueRe, `$1${newValue}$2`)
-    .replace(priceRe, `$1${newValue}$2`);
+    .replace(priceRe, `$1${newValue}`);
   return { line: updated, changed: updated !== line };
 }
 
