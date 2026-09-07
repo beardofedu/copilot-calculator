@@ -32,7 +32,7 @@ The calculator is a single `index.html` file with no dependencies. Just open it 
 
 ### Adding a third competitor
 
-Use the **"Add a third competitor"** dropdown above the vendor cards to bring a third AI coding assistant into the comparison: **Cursor**, **Amazon Q Developer**, **Google Gemini Code Assist**, or **OpenAI ChatGPT**. Each option adds a seat-based pricing card (with optional API token usage for providers that expose per-token API rates) and a matching column in the results and side-by-side summary table. Select **None** to return to the original two-way comparison.
+Use the **"Add a third competitor"** dropdown above the vendor cards to bring a third AI coding assistant into the comparison: **Cursor**, **Amazon Q Developer**, **Google Gemini Code Assist**, or **OpenAI ChatGPT**. Each option adds a seat-based pricing card (with optional API token usage for providers that expose per-token API rates) and a matching column in the results and side-by-side summary table. For API-based competitors, enable **"Assume same usage as GitHub Copilot side"** to reuse Copilot token volumes with the competitor's closest available model rates. Select **None** to return to the original two-way comparison.
 
 ### Results
 

@@ -992,8 +992,22 @@
           <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
             <span>API Token Usage <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></span>
           </div>
-          <div id="thirdModelRowsContainer"></div>
-          <button class="add-model-btn" onclick="addThirdModelRow()">＋ Add another model</button>
+          <div class="toggle-row" onclick="toggleThirdMirror(event)" style="margin-bottom:10px">
+            <input type="checkbox" id="thirdMirrorEnabled" />
+            <div>
+              <div class="toggle-label">Assume same usage as GitHub Copilot side</div>
+              <div class="toggle-desc">Uses Copilot token volumes with this competitor's API model rates</div>
+            </div>
+          </div>
+          <div id="thirdMirrorDisclaimer" class="mirror-disclaimer hidden">
+            <div class="disc-title">⚠️ Generic Assumption — Not a Direct Comparison</div>
+            This estimate reuses token volumes from the GitHub Copilot side with the selected competitor's closest available API models. It is intended only as an illustrative estimate.
+          </div>
+          <div id="thirdMirroredContainer" class="hidden"></div>
+          <div id="thirdManualRows">
+            <div id="thirdModelRowsContainer"></div>
+            <button class="add-model-btn" onclick="addThirdModelRow()">＋ Add another model</button>
+          </div>
         </div>
 
         <!-- ── Vendor Discount ── -->
@@ -1752,6 +1766,15 @@ function toggleAntMirror(event) {
   calculate();
 }
 
+function toggleThirdMirror(event) {
+  const cb = $('thirdMirrorEnabled');
+  if (event?.target !== cb) cb.checked = !cb.checked;
+  $('thirdMirrorDisclaimer').classList.toggle('hidden', !cb.checked);
+  $('thirdMirroredContainer').classList.toggle('hidden', !cb.checked);
+  $('thirdManualRows').classList.toggle('hidden', cb.checked);
+  calculate();
+}
+
 function toggleAntCreditsMode(event) {
   const cb = $('antCreditsWholeAccount');
   if (event?.target !== cb) cb.checked = !cb.checked;
@@ -1818,6 +1841,16 @@ function readThirdModelRows() {
     const model       = models.find(m => m.id === modelSel.value) || models[0];
     return { id, model, inputM, cachedM, cacheWriteM, outputM };
   }).filter(Boolean);
+}
+
+function closestThirdModel(provider, ghModel) {
+  const models = COPILOT_MODELS[provider] || [];
+  return models.reduce((closest, model) => {
+    if (!closest) return model;
+    const modelDistance = Math.abs((model.input + model.output) - (ghModel.input + ghModel.output));
+    const closestDistance = Math.abs((closest.input + closest.output) - (ghModel.input + ghModel.output));
+    return modelDistance < closestDistance ? model : closest;
+  }, null);
 }
 
 // ── Core Calculation ──────────────────────────────────────────────────────────
@@ -2142,8 +2175,18 @@ function calculate() {
     $('thirdMonthlySeatCost').textContent = fmt(thirdSeatCostRaw);
     $('thirdPlanName').textContent        = thirdPlanLabel || '—';
 
+    const thirdMirrorOn = thirdCompetitor.modelsProvider && $('thirdMirrorEnabled').checked;
     const thirdModelSummaries = [];
-    readThirdModelRows().forEach(r => {
+    const thirdCreditSummaries = [];
+    const thirdRows = thirdMirrorOn
+      ? readGhModelRows().map(r => ({
+          ...r,
+          ghLabel: r.model.label,
+          model: closestThirdModel(thirdCompetitor.modelsProvider, r.model),
+        })).filter(r => r.model)
+      : readThirdModelRows();
+
+    thirdRows.forEach(r => {
       const inputCost      = applyDiscount(r.inputM      * r.model.input, thirdTokenDiscPct);
       const cachedCost     = applyDiscount(r.cachedM     * r.model.cachedInput, thirdTokenDiscPct);
       const cacheWriteCost = r.model.cacheWrite
@@ -2152,9 +2195,9 @@ function calculate() {
       const outputCost     = applyDiscount(r.outputM     * r.model.output, thirdTokenDiscPct);
       const rowTotal       = inputCost + cachedCost + cacheWriteCost + outputCost;
       thirdTokenTotal += rowTotal;
-      thirdModelSummaries.push({ label: r.model.label, inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal, hasCacheWrite: !!r.model.cacheWrite });
+      thirdModelSummaries.push({ label: r.model.label, ghLabel: thirdMirrorOn ? r.ghLabel : '', inputCost, cachedCost, cacheWriteCost, outputCost, rowTotal, hasCacheWrite: !!r.model.cacheWrite });
 
-      const costEl = $('thirdrow-' + r.id + '-cost');
+      const costEl = thirdMirrorOn ? null : $('thirdrow-' + r.id + '-cost');
       if (costEl) {
         costEl.innerHTML = `
           <span class="cost-item">In: ${fmt(inputCost)}</span>
@@ -2165,21 +2208,62 @@ function calculate() {
       }
     });
 
+    if (thirdMirrorOn && $('ghDirectCreditsEnabled').checked) {
+      readGhCreditRows().forEach(r => {
+        const rowTotal = applyDiscount(r.credits * 0.01, thirdTokenDiscPct);
+        thirdTokenTotal += rowTotal;
+        thirdCreditSummaries.push({ label: r.model.label, credits: r.credits, rowTotal });
+      });
+    }
+
+    if (thirdMirrorOn) {
+      const mirroredModelHTML = thirdModelSummaries.map(s => `<div class="mirror-row">
+            <div class="mirror-row-header">
+              <span class="gh-label">${s.ghLabel}</span>
+              <span class="arrow">→</span>
+              <span class="ant-label">${s.label}</span>
+            </div>
+            <div class="mirror-row-cost">
+              <span class="cost-item">In: ${fmt(s.inputCost)}</span>
+              <span class="cost-item">Cached: ${fmt(s.cachedCost)}</span>
+              ${s.hasCacheWrite ? `<span class="cost-item">CW: ${fmt(s.cacheWriteCost)}</span>` : ''}
+              <span class="cost-item">Out: ${fmt(s.outputCost)}</span>
+              <span class="cost-total">${fmt(s.rowTotal)}</span>
+            </div>
+          </div>`).join('');
+      const mirroredCreditHTML = thirdCreditSummaries.map(s => `<div class="mirror-row">
+            <div class="mirror-row-header">
+              <span class="gh-label">${s.label}</span>
+              <span class="arrow">→</span>
+              <span class="ant-label">Direct credit usage</span>
+            </div>
+            <div class="mirror-row-cost">
+              <span class="cost-item">GH credits: ${fmtCred(s.credits)}</span>
+              <span class="cost-total">${fmt(s.rowTotal)} proxy</span>
+            </div>
+          </div>`).join('');
+      $('thirdMirroredContainer').innerHTML = mirroredModelHTML + mirroredCreditHTML ||
+        `<div style="font-size:13px;color:var(--muted);padding:10px 0">Add model rows or direct credit entries on the GitHub Copilot side to see mirrored estimates here.</div>`;
+    }
+
     thirdTotal = thirdSeatCost + thirdTokenTotal;
 
-    $('thirdModelTag').textContent = thirdModelSummaries.map(s => s.label).join(', ').substring(0, 60);
+    $('thirdModelTag').textContent = [...thirdModelSummaries, ...thirdCreditSummaries].map(s => s.label).join(', ').substring(0, 60);
 
     let thirdHTML = '';
     thirdHTML += brow(`Seat cost — ${thirdPlanLabel} (${thirdSeatUsers} × ${fmt(thirdPlanPrice)})`, fmt(thirdSeatCostRaw));
     if (thirdSeatDiscPct > 0)
       thirdHTML += brow(`Seat discount (${thirdSeatDiscPct}%)`, '−' + fmt(thirdSeatCostRaw - thirdSeatCost), 'discount-row');
     thirdHTML += brow('Net seat cost', fmt(thirdSeatCost));
-    if (thirdModelSummaries.length) {
+    if (thirdModelSummaries.length || thirdCreditSummaries.length) {
       thirdHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
-      thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">API Token Usage</div>`;
+        thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">${thirdMirrorOn ? 'Estimated API Token Usage (mirrored)' : 'API Token Usage'}</div>`;
       thirdModelSummaries.forEach(s => {
-        thirdHTML += brow(s.label, fmt(s.rowTotal));
+          thirdHTML += brow(s.label + (thirdMirrorOn ? ` <span style="color:var(--muted);font-size:11px">(from Copilot)</span>` : ''), fmt(s.rowTotal));
         thirdHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}${s.hasCacheWrite ? `  CW: ${fmt(s.cacheWriteCost)}` : ''}  Out: ${fmt(s.outputCost)}`, '', '');
+      });
+      thirdCreditSummaries.forEach(s => {
+          thirdHTML += brow(s.label + ' <span style="color:var(--muted);font-size:11px">(credit proxy from Copilot)</span>', fmt(s.rowTotal));
       });
       if (thirdTokenDiscPct > 0)
         thirdHTML += brow(`Token rate discount (${thirdTokenDiscPct}%)`, '✓', 'discount-row');
