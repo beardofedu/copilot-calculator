@@ -32,7 +32,7 @@ The calculator is a single `index.html` file with no dependencies. Just open it 
 
 ### Adding a third competitor
 
-Use the **"Add a third competitor"** dropdown above the vendor cards to bring a third AI coding assistant into the comparison: **Cursor**, **Amazon Q Developer**, **Google Gemini Code Assist**, or **OpenAI ChatGPT**. Each option adds a seat-based pricing card (with optional API token usage for providers that expose per-token API rates) and a matching column in the results and side-by-side summary table. For API-based competitors, enable **"Assume same usage as GitHub Copilot side"** to reuse Copilot token volumes with the competitor's closest available model rates. Select **None** to return to the original two-way comparison.
+Use the **"Add a third competitor"** dropdown above the vendor cards to bring a third AI coding assistant into the comparison: **Cursor**, **Amazon Q Developer**, **Google Gemini Code Assist**, or **OpenAI ChatGPT**. Each option adds a seat-based pricing card (with optional model token usage where the vendor publishes per-token rates) and a matching column in the results and side-by-side summary table. For competitors with published model rates, enable **"Assume same usage as GitHub Copilot side"** to reuse Copilot token volumes with the competitor's closest available model rates. This represents Cursor consumption or separately billed Google/OpenAI API use as identified in each card; it does not represent Gemini Code Assist or ChatGPT workspace consumption. Select **None** to return to the original two-way comparison.
 
 ### Results
 
@@ -45,7 +45,7 @@ The **Monthly Cost Breakdown** section shows a full line-item breakdown for each
 - Code completions on GitHub Copilot are **unlimited** and do not consume AI credits — this calculator only covers token-based model usage and seat costs.
 - The **"Assume same usage"** mirror mode on the Anthropic side maps Copilot model tiers to roughly equivalent Anthropic models. It is an illustrative estimate only — model quality, latency, context windows, and capabilities differ meaningfully.
 - Claude.ai plans do not include a fixed API-token credit pool. Optional usage credits are purchased separately and API usage is billed at standard Anthropic rates.
-- The optional third competitor (Cursor, Amazon Q Developer, Google Gemini Code Assist, or OpenAI ChatGPT) uses publicly listed seat pricing at the time it was added and does not model every plan detail (e.g. included usage credit pools, overage rules). Verify current pricing directly with each vendor before making purchasing decisions.
+- The optional third competitor (Cursor, Amazon Q Developer, Google Gemini Code Assist, or OpenAI ChatGPT) uses publicly listed seat pricing at the time it was added. Cursor model consumption is priced from Cursor's published model rates. Amazon Q Developer's published code-transformation allowance and per-line overage, Gemini Code Assist quotas, and ChatGPT workspace-credit terms are not modeled. Verify current pricing directly with each vendor before making purchasing decisions.
 
 ---
 
