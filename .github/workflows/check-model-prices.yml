@@ -13,6 +13,8 @@ permissions:
 jobs:
   check-prices:
     runs-on: ubuntu-latest
+    env:
+      UPDATE_BRANCH: automated/update-model-prices
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,7 +68,7 @@ jobs:
             ${{ steps.check_competitors.outputs.summary }}
 
             Please review the changes before merging, especially any competitor price updates, since those are matched heuristically against marketing pages rather than a structured data source.
-          branch: automated/update-model-prices
+          branch: ${{ env.UPDATE_BRANCH }}
           delete-branch: true
           assignees: beardofedu
 
@@ -75,7 +77,6 @@ jobs:
         env:
           PR_NUMBER: ${{ steps.create_pr.outputs.pull-request-number }}
           PR_URL: ${{ steps.create_pr.outputs.pull-request-url }}
-          BRANCH: automated/update-model-prices
         run: |
           if [ -n "$PR_NUMBER" ]; then
             echo "Pull request #$PR_NUMBER: $PR_URL" >> "$GITHUB_STEP_SUMMARY"
@@ -83,15 +84,15 @@ jobs:
           fi
 
           {
-            echo "### Price updates pushed, but no pull request was opened"
+            echo "### No pull request was opened for the detected price updates"
             echo
-            echo "Updated prices were pushed to the \`$BRANCH\` branch, but the pull request could not be created."
+            echo "Price updates were detected, but no pull request could be created."
             echo
             echo "This usually means GitHub Actions is not permitted to create pull requests in this repository."
             echo "To fix it, either enable **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**,"
             echo "or add a \`PRICE_UPDATE_PAT\` repository secret containing a personal access token with \`contents: write\` and \`pull-requests: write\` permissions."
             echo
-            echo "In the meantime, open a pull request from \`$BRANCH\` manually."
+            echo "If the \`$UPDATE_BRANCH\` branch was pushed, open a pull request from it manually; otherwise check the logs of the previous step for the underlying error."
           } >> "$GITHUB_STEP_SUMMARY"
 
-          echo "::warning::No pull request was created; open one manually from the $BRANCH branch."
+          echo "::warning::No pull request was created; see the job summary and the 'Create pull request' step logs."
