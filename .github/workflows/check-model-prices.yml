@@ -39,10 +39,17 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Uses PRICE_UPDATE_PAT (a personal access token with `contents: write` and
+      # `pull-requests: write`) when it is configured. Without it the default
+      # GITHUB_TOKEN is used, which can only open pull requests when the repository
+      # setting "Allow GitHub Actions to create and approve pull requests" is enabled.
       - name: Create pull request
+        id: create_pr
         if: steps.combine.outputs.changed == 'true'
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
+          token: ${{ secrets.PRICE_UPDATE_PAT || secrets.GITHUB_TOKEN }}
           commit-message: 'Update model and competitor prices'
           title: 'Update model and competitor prices'
           body: |
@@ -62,3 +69,29 @@ jobs:
           branch: automated/update-model-prices
           delete-branch: true
           assignees: beardofedu
+
+      - name: Report pull request status
+        if: steps.combine.outputs.changed == 'true'
+        env:
+          PR_NUMBER: ${{ steps.create_pr.outputs.pull-request-number }}
+          PR_URL: ${{ steps.create_pr.outputs.pull-request-url }}
+          BRANCH: automated/update-model-prices
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Pull request #$PR_NUMBER: $PR_URL" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "### Price updates pushed, but no pull request was opened"
+            echo
+            echo "Updated prices were pushed to the \`$BRANCH\` branch, but the pull request could not be created."
+            echo
+            echo "This usually means GitHub Actions is not permitted to create pull requests in this repository."
+            echo "To fix it, either enable **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**,"
+            echo "or add a \`PRICE_UPDATE_PAT\` repository secret containing a personal access token with \`contents: write\` and \`pull-requests: write\` permissions."
+            echo
+            echo "In the meantime, open a pull request from \`$BRANCH\` manually."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::warning::No pull request was created; open one manually from the $BRANCH branch."
