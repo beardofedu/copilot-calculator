@@ -227,6 +227,15 @@ async function main() {
     lines[i] = line;
   }
 
+  const mappedDocKeys = new Set(
+    MODEL_MAP.map(entry => entry.docLabel + '|' + (entry.tier || ''))
+  );
+  for (const [key, prices] of docPrices) {
+    if (!mappedDocKeys.has(key) && PRICE_FIELDS.some(field => prices[field] !== undefined)) {
+      warnings.push(`Official pricing row "${key}" has no configured Copilot model mapping.`);
+    }
+  }
+
   for (const entry of MODEL_MAP) {
     if (!docPrices.has(entry.docLabel + '|' + (entry.tier || ''))) {
       warnings.push(`No match found in official docs for "${entry.docLabel}"${entry.tier ? ` (${entry.tier})` : ''} (ids: ${entry.ids.join(', ')}).`);
