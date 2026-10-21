@@ -2320,28 +2320,50 @@ function calculate() {
 
     $('thirdModelTag').textContent = [...thirdModelSummaries, ...thirdCreditSummaries].map(s => s.label).join(', ').substring(0, 60);
 
-    let thirdHTML = '';
-    thirdHTML += brow(`Seat cost — ${thirdPlanLabel} (${thirdSeatUsers} × ${fmt(thirdPlanPrice)})`, fmt(thirdSeatCostRaw));
+    const thirdBreakdown = $('thirdBreakdown');
+    thirdBreakdown.replaceChildren();
+    const addThirdBreakdownRow = (label, value, cls = '', note = '') => {
+      const row = document.createElement('div');
+      row.className = `breakdown-row ${cls}`;
+      const labelEl = document.createElement('span');
+      labelEl.className = 'label';
+      labelEl.textContent = label;
+      if (note) {
+        const noteEl = document.createElement('span');
+        noteEl.style.cssText = 'color:var(--muted);font-size:11px';
+        noteEl.textContent = note;
+        labelEl.append(' ', noteEl);
+      }
+      const valueEl = document.createElement('span');
+      valueEl.className = 'value';
+      valueEl.textContent = value;
+      row.append(labelEl, valueEl);
+      thirdBreakdown.appendChild(row);
+    };
+    addThirdBreakdownRow(`Seat cost — ${thirdPlanLabel} (${thirdSeatUsers} × ${fmt(thirdPlanPrice)})`, fmt(thirdSeatCostRaw));
     if (thirdSeatDiscPct > 0)
-      thirdHTML += brow(`Seat discount (${thirdSeatDiscPct}%)`, '−' + fmt(thirdSeatCostRaw - thirdSeatCost), 'discount-row');
-    thirdHTML += brow('Net seat cost', fmt(thirdSeatCost));
+      addThirdBreakdownRow(`Seat discount (${thirdSeatDiscPct}%)`, '−' + fmt(thirdSeatCostRaw - thirdSeatCost), 'discount-row');
+    addThirdBreakdownRow('Net seat cost', fmt(thirdSeatCost));
     if (thirdModelSummaries.length || thirdCreditSummaries.length) {
-      thirdHTML += `<div style="border-top:1px solid var(--border);margin:6px 0 4px"></div>`;
-      thirdHTML += `<div style="font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">${thirdMirrorOn ? 'Estimated API Token Usage (mirrored)' : 'API Token Usage'}</div>`;
+      const divider = document.createElement('div');
+      divider.style.cssText = 'border-top:1px solid var(--border);margin:6px 0 4px';
+      thirdBreakdown.appendChild(divider);
+      const heading = document.createElement('div');
+      heading.style.cssText = 'font-size:11px;color:var(--muted);padding:4px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em';
+      heading.textContent = thirdMirrorOn ? 'Estimated API Token Usage (mirrored)' : 'API Token Usage';
+      thirdBreakdown.appendChild(heading);
       thirdModelSummaries.forEach(s => {
-        thirdHTML += brow(s.label + (thirdMirrorOn ? ` <span style="color:var(--muted);font-size:11px">(from Copilot)</span>` : ''), fmt(s.rowTotal));
-        thirdHTML += brow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}${s.hasCacheWrite ? `  CW: ${fmt(s.cacheWriteCost)}` : ''}  Out: ${fmt(s.outputCost)}`, '', '');
+        addThirdBreakdownRow(s.label, fmt(s.rowTotal), '', thirdMirrorOn ? '(from Copilot)' : '');
+        addThirdBreakdownRow(`  ↳ In: ${fmt(s.inputCost)}  Cached: ${fmt(s.cachedCost)}${s.hasCacheWrite ? `  CW: ${fmt(s.cacheWriteCost)}` : ''}  Out: ${fmt(s.outputCost)}`, '');
       });
       thirdCreditSummaries.forEach(s => {
-        thirdHTML += brow(s.label + ' <span style="color:var(--muted);font-size:11px">(credit proxy from Copilot)</span>', fmt(s.rowTotal));
+        addThirdBreakdownRow(s.label, fmt(s.rowTotal), '', '(credit proxy from Copilot)');
       });
       if (thirdTokenDiscPct > 0)
-        thirdHTML += brow(`Token rate discount (${thirdTokenDiscPct}%)`, '✓', 'discount-row');
-      thirdHTML += brow('Token subtotal', fmt(thirdTokenTotal));
+        addThirdBreakdownRow(`Token rate discount (${thirdTokenDiscPct}%)`, '✓', 'discount-row');
+      addThirdBreakdownRow('Token subtotal', fmt(thirdTokenTotal));
     }
-    thirdHTML += brow('Monthly Total', fmt(thirdTotal), 'total-row');
-
-    $('thirdBreakdown').innerHTML = thirdHTML;
+    addThirdBreakdownRow('Monthly Total', fmt(thirdTotal), 'total-row');
     $('thirdTotal').textContent   = fmt(thirdTotal);
   }
 
