@@ -728,7 +728,7 @@
 </div>
 
 <div class="last-updated">
-  Last updated: September 7, 2026 · <a href="https://github.com/beardofedu/copilot-calculator/commits" target="_blank" rel="noopener">View commit history</a>
+  Copilot model rates last verified: October 20, 2026 · competitor plan prices are point-in-time snapshots · <a href="https://github.com/beardofedu/copilot-calculator/commits" target="_blank" rel="noopener">View commit history</a>
 </div>
 
 <div class="container">
@@ -1154,122 +1154,124 @@
 // All prices in $ per 1M tokens
 const COPILOT_MODELS = {
   openai: [
-    { id: 'gpt5mini',       label: 'GPT-5 mini',              input: 0.25,  cachedInput: 0.025, output: 2.00  },
     { id: 'gpt53codex',     label: 'GPT-5.3-Codex',           input: 1.75,  cachedInput: 0.175, output: 14.00 },
-    { id: 'gpt54',          label: 'GPT-5.4 (≤272K)',          input: 2.50,  cachedInput: 0.25,  output: 15.00 },
-    { id: 'gpt54lc',        label: 'GPT-5.4 (>272K)',          input: 5.00,  cachedInput: 0.50,  output: 22.50 },
-    { id: 'gpt54mini',      label: 'GPT-5.4 mini',            input: 0.75,  cachedInput: 0.075, output: 4.50  },
     { id: 'gpt54nano',      label: 'GPT-5.4 nano',            input: 0.20,  cachedInput: 0.02,  output: 1.25  },
-    { id: 'gpt55',          label: 'GPT-5.5 (≤272K)',          input: 5.00,  cachedInput: 0.50,  output: 30.00 },
-    { id: 'gpt55lc',        label: 'GPT-5.5 (>272K)',          input: 10.00, cachedInput: 1.00,  output: 45.00 },
     { id: 'gpt56luna',      label: 'GPT-5.6 Luna (≤200K)',     input: 0.20,  cachedInput: 0.02,  cacheWrite: 0.25,  output: 1.20  },
     { id: 'gpt56lunalc',    label: 'GPT-5.6 Luna (>200K)',     input: 0.40,  cachedInput: 0.04,  cacheWrite: 0.50,  output: 1.80  },
     { id: 'gpt56sol',       label: 'GPT-5.6 Sol (≤272K)',      input: 4.00,  cachedInput: 0.40,  cacheWrite: 5.00,  output: 20.00 },
     { id: 'gpt56sollc',     label: 'GPT-5.6 Sol (>272K)',      input: 8.00,  cachedInput: 0.80,  cacheWrite: 10.00, output: 30.00 },
-    { id: 'gpt56terra',     label: 'GPT-5.6 Terra (≤272K)',    input: 2.00,  cachedInput: 0.20,  cacheWrite: 2.50,  output: 12.00 },
-    { id: 'gpt56terralc',   label: 'GPT-5.6 Terra (>272K)',    input: 4.00,  cachedInput: 0.40,  cacheWrite: 5.00,  output: 18.00 },
+    { id: 'gpt56terra',    label: 'GPT-5.6 Terra (≤272K)',    input: 2.00,  cachedInput: 0.20,  cacheWrite: 2.50,  output: 12.00 },
+    { id: 'gpt56terralc',  label: 'GPT-5.6 Terra (>272K)',    input: 4.00,  cachedInput: 0.40,  cacheWrite: 5.00,  output: 18.00 },
+    { id: 'gpt6astra',      label: 'GPT-6 Astra (≤272K)',      input: 10.00, cachedInput: 1.00,  cacheWrite: 12.50, output: 50.00 },
+    { id: 'gpt6astralc',    label: 'GPT-6 Astra (>272K)',      input: 20.00, cachedInput: 2.00,  cacheWrite: 25.00, output: 75.00 },
+    { id: 'gpt6luna',       label: 'GPT-6 Luna (≤272K)',       input: 0.10,  cachedInput: 0.01,  cacheWrite: 0.125, output: 0.50  },
+    { id: 'gpt6lunalc',     label: 'GPT-6 Luna (>272K)',       input: 0.20,  cachedInput: 0.02,  cacheWrite: 0.25,  output: 0.75  },
+    { id: 'gpt6sol',        label: 'GPT-6 Sol (≤272K)',        input: 2.00,  cachedInput: 0.20,  cacheWrite: 2.50,  output: 10.00 },
+    { id: 'gpt6sollc',      label: 'GPT-6 Sol (>272K)',        input: 4.00,  cachedInput: 0.40,  cacheWrite: 5.00,  output: 15.00 },
+    { id: 'gpt61sol',       label: 'GPT-6.1 Sol (≤272K)',      input: 2.00,  cachedInput: 0.10,  cacheWrite: 2.50,  output: 10.00 },
+    { id: 'gpt61sollc',     label: 'GPT-6.1 Sol (>272K)',      input: 4.00,  cachedInput: 0.20,  cacheWrite: 5.00,  output: 15.00 },
   ],
   anthropic: [
-    { id: 'haiku45',   label: 'Claude Haiku 4.5',  input: 1.00,  cachedInput: 0.10, cacheWrite: 1.25,  output: 5.00  },
-    { id: 'sonnet4',   label: 'Claude Sonnet 4',   input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
-    { id: 'sonnet45',  label: 'Claude Sonnet 4.5', input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
-    { id: 'sonnet46',  label: 'Claude Sonnet 4.6', input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
-    { id: 'opus45',    label: 'Claude Opus 4.5',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
-    { id: 'opus46',    label: 'Claude Opus 4.6',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
-    { id: 'opus47',    label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
-    { id: 'opus48',    label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+    { id: 'haiku45',   label: 'Claude Haiku 4.5',  input: 1.00,  cachedInput: 0.10, cacheWrite: 1.25,   output: 5.00  },
+    { id: 'haiku55',   label: 'Claude Haiku 5.5 (≤100K)', input: 0.10, cachedInput: 0.01, cacheWrite: 0.125, output: 0.50 },
+    { id: 'haiku55lc', label: 'Claude Haiku 5.5 (>100K)', input: 0.50, cachedInput: 0.05, cacheWrite: 0.625, output: 2.50 },
+    { id: 'sonnet4',   label: 'Claude Sonnet 4',   input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,   output: 15.00 },
+    { id: 'sonnet46',  label: 'Claude Sonnet 4.6', input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,   output: 15.00 },
+    { id: 'opus48',    label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,   output: 25.00 },
     { id: 'opus48fast',label: 'Claude Opus 4.8 (fast mode) ⚠ Preview', input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
     { id: 'opus5',     label: 'Claude Opus 5',     input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
-    { id: 'sonnet5',   label: 'Claude Sonnet 5 ⚠ Promo through Aug 31, 2026', input: 2.00, cachedInput: 0.20, cacheWrite: 2.50, output: 10.00 },
-    { id: 'fable5',    label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+    { id: 'opus55',    label: 'Claude Opus 5.5',   input: 4.00,  cachedInput: 0.20, cacheWrite: 5.00,   output: 20.00 },
+    { id: 'sonnet5',   label: 'Claude Sonnet 5',   input: 2.00,  cachedInput: 0.20, cacheWrite: 2.50,   output: 10.00 },
+    { id: 'sonnet55',  label: 'Claude Sonnet 5.5', input: 2.00,  cachedInput: 0.10, cacheWrite: 2.50,   output: 10.00 },
+    { id: 'fable5',    label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50,  output: 50.00 },
+    { id: 'fable51',   label: 'Claude Fable 5.1',  input: 10.00, cachedInput: 0.25, cacheWrite: 12.50,  output: 50.00 },
   ],
   google: [
-    { id: 'gemini25pro',   label: 'Gemini 2.5 Pro',           input: 1.25, cachedInput: 0.125, output: 10.00 },
-    { id: 'gemini3flash',  label: 'Gemini 3 Flash ⚠ Preview',  input: 0.50, cachedInput: 0.05,  output: 3.00  },
-    { id: 'gemini31pro',   label: 'Gemini 3.1 Pro (≤200K) ⚠', input: 2.00, cachedInput: 0.20,  output: 12.00 },
-    { id: 'gemini31prolc', label: 'Gemini 3.1 Pro (>200K) ⚠', input: 4.00, cachedInput: 0.40,  output: 18.00 },
-    { id: 'gemini35flash', label: 'Gemini 3.5 Flash',          input: 1.50, cachedInput: 0.15,  output: 9.00  },
-    { id: 'gemini36flash', label: 'Gemini 3.6 Flash',          input: 0.75, cachedInput: 0.075, output: 3.75  },
-  ],
-  github: [
-    { id: 'raptormini',   label: 'Raptor mini ⚠ Preview', input: 0.25, cachedInput: 0.025, output: 2.00 },
+    { id: 'gemini38flash', label: 'Gemini 3.8 Flash ⚠ Promo through Dec 31, 2026', input: 0.75, cachedInput: 0.075, output: 3.75 },
+    { id: 'gemini4argon',  label: 'Gemini 4 Argon ⚠ Promo through Dec 1, 2026', input: 2.00, cachedInput: 0.10, output: 10.00 },
   ],
   microsoft: [
-    { id: 'maicodeflash', label: 'MAI-Code-1-Flash',       input: 0.75, cachedInput: 0.075, output: 4.50 },
+    { id: 'maicode11flash', label: 'MAI-Code-1.1-Flash',    input: 0.20, cachedInput: 0.02, output: 1.20 },
   ],
   xai: [
     { id: 'grok45',       label: 'Grok 4.5 (≤200K)',         input: 2.00, cachedInput: 0.50, output: 6.00 },
     { id: 'grok45lc',     label: 'Grok 4.5 (>200K)',          input: 4.00, cachedInput: 1.00, output: 12.00 },
+    { id: 'grok46',       label: 'Grok 4.6 (≤200K)',         input: 2.00, cachedInput: 0.50, output: 6.00 },
+    { id: 'grok46lc',     label: 'Grok 4.6 (>200K)',          input: 4.00, cachedInput: 1.00, output: 12.00 },
+    { id: 'grok47',       label: 'Grok 4.7 (≤200K)',         input: 2.00, cachedInput: 0.50, output: 6.00 },
+    { id: 'grok47lc',     label: 'Grok 4.7 (>200K)',          input: 4.00, cachedInput: 1.00, output: 12.00 },
   ],
   moonshot: [
-    { id: 'kimi27',       label: 'Kimi K2.7 Code',            input: 0.95, cachedInput: 0.19, output: 4.00 },
+    { id: 'kimi3',        label: 'Kimi K3',                   input: 3.00, cachedInput: 0.30, output: 15.00 },
   ],
   cursor: [
     { id: 'auto',         label: 'Auto',                      input: 1.25, cachedInput: 0.25, output: 6.00 },
     { id: 'composer25',   label: 'Composer 2.5',              input: 0.50, cachedInput: 0.05, output: 2.50 },
-    { id: 'grok46',       label: 'Grok 4.6',                  input: 2.00, cachedInput: 0.50, output: 6.00 },
+    { id: 'cursorgrok46', label: 'Grok 4.6',                  input: 2.00, cachedInput: 0.50, output: 6.00 },
   ],
 };
 
 const ANTHROPIC_MODELS = {
-  'haiku-4.5':  { label: 'Claude Haiku 4.5',  input: 1.00,  cachedInput: 0.10, cacheWrite: 1.25,  output: 5.00  },
-  'sonnet-4':   { label: 'Claude Sonnet 4',   input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
-  'sonnet-4.5': { label: 'Claude Sonnet 4.5', input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
-  'sonnet-4.6': { label: 'Claude Sonnet 4.6', input: 3.00,  cachedInput: 0.30, cacheWrite: 3.75,  output: 15.00 },
-  'opus-4.5':   { label: 'Claude Opus 4.5',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
-  'opus-4.6':   { label: 'Claude Opus 4.6',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
-  'opus-4.7':   { label: 'Claude Opus 4.7',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
-  'opus-4.8':   { label: 'Claude Opus 4.8',   input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25,  output: 25.00 },
+  'haiku-4.5':  { label: 'Claude Haiku 4.5',  input: 1.00, cachedInput: 0.10, cacheWrite: 1.25,   output: 5.00  },
+  'haiku-5.5':  { label: 'Claude Haiku 5.5',  input: 0.10, cachedInput: 0.01, cacheWrite: 0.125,  output: 0.50  },
+  'sonnet-4':   { label: 'Claude Sonnet 4',   input: 3.00, cachedInput: 0.30, cacheWrite: 3.75,   output: 15.00 },
+  'sonnet-4.6': { label: 'Claude Sonnet 4.6', input: 3.00, cachedInput: 0.30, cacheWrite: 3.75,   output: 15.00 },
+  'opus-4.8':   { label: 'Claude Opus 4.8',   input: 5.00, cachedInput: 0.50, cacheWrite: 6.25,   output: 25.00 },
   'opus-4.8-fast': { label: 'Claude Opus 4.8 (fast mode)', input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
-  'opus-5':     { label: 'Claude Opus 5',     input: 5.00,  cachedInput: 0.50, cacheWrite: 6.25, output: 25.00 },
-  'sonnet-5':   { label: 'Claude Sonnet 5',   input: 2.00,  cachedInput: 0.20, cacheWrite: 2.50, output: 10.00 },
-  'fable-5':    { label: 'Claude Fable 5',    input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+  'opus-5':     { label: 'Claude Opus 5',    input: 5.00, cachedInput: 0.50, cacheWrite: 6.25,   output: 25.00 },
+  'opus-5.5':   { label: 'Claude Opus 5.5',  input: 4.00, cachedInput: 0.20, cacheWrite: 5.00,   output: 20.00 },
+  'sonnet-5':   { label: 'Claude Sonnet 5',  input: 2.00, cachedInput: 0.20, cacheWrite: 2.50,  output: 10.00 },
+  'sonnet-5.5': { label: 'Claude Sonnet 5.5',input: 2.00, cachedInput: 0.10, cacheWrite: 2.50,  output: 10.00 },
+  'fable-5':    { label: 'Claude Fable 5',   input: 10.00, cachedInput: 1.00, cacheWrite: 12.50, output: 50.00 },
+  'fable-5.1':  { label: 'Claude Fable 5.1', input: 10.00, cachedInput: 0.25, cacheWrite: 12.50, output: 50.00 },
 };
 
 // ── Copilot → Anthropic model mapping (by capability tier) ───────────────────
 // Anthropic models in Copilot map directly; others map by tier.
 const GH_TO_ANT_MAP = {
   // OpenAI
-  gpt5mini:      { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
   gpt53codex:    { key: 'sonnet-4.6', how: 'tier match (versatile/coder)' },
-  gpt54:         { key: 'sonnet-4.6', how: 'tier match (versatile)' },
-  gpt54lc:       { key: 'sonnet-4.6', how: 'tier match (versatile, long ctx)' },
-  gpt54mini:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
   gpt54nano:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
-  gpt55:         { key: 'opus-4.8',   how: 'tier match (powerful)' },
-  gpt55lc:       { key: 'opus-4.8',   how: 'tier match (powerful, long ctx)' },
   gpt56luna:     { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
   gpt56lunalc:   { key: 'haiku-4.5',  how: 'tier match (lightweight, long ctx)' },
   gpt56sol:      { key: 'opus-5',     how: 'tier match (powerful)' },
   gpt56sollc:    { key: 'opus-5',     how: 'tier match (powerful, long ctx)' },
   gpt56terra:    { key: 'sonnet-5',   how: 'tier match (versatile)' },
   gpt56terralc:  { key: 'sonnet-5',   how: 'tier match (versatile, long ctx)' },
+  gpt6astra:     { key: 'opus-5.5',   how: 'tier match (powerful)' },
+  gpt6astralc:   { key: 'opus-5.5',   how: 'tier match (powerful, long ctx)' },
+  gpt6luna:      { key: 'haiku-5.5',  how: 'tier match (lightweight)' },
+  gpt6lunalc:    { key: 'haiku-5.5',  how: 'tier match (lightweight, long ctx)' },
+  gpt6sol:       { key: 'opus-5',     how: 'tier match (powerful)' },
+  gpt6sollc:     { key: 'opus-5',     how: 'tier match (powerful, long ctx)' },
+  gpt61sol:      { key: 'opus-5',     how: 'tier match (powerful)' },
+  gpt61sollc:    { key: 'opus-5',     how: 'tier match (powerful, long ctx)' },
   // Anthropic — direct equivalents
   haiku45:       { key: 'haiku-4.5',  how: 'direct equivalent' },
+  haiku55:       { key: 'haiku-5.5',  how: 'direct equivalent' },
+  haiku55lc:     { key: 'haiku-5.5',  how: 'direct equivalent (long context)' },
   sonnet4:       { key: 'sonnet-4',   how: 'direct equivalent' },
-  sonnet45:      { key: 'sonnet-4.5', how: 'direct equivalent' },
   sonnet46:      { key: 'sonnet-4.6', how: 'direct equivalent' },
-  opus45:        { key: 'opus-4.5',   how: 'direct equivalent' },
-  opus46:        { key: 'opus-4.6',   how: 'direct equivalent' },
-  opus47:        { key: 'opus-4.7',   how: 'direct equivalent' },
   opus48:        { key: 'opus-4.8',   how: 'direct equivalent' },
   opus48fast:    { key: 'opus-4.8-fast', how: 'direct equivalent' },
   opus5:         { key: 'opus-5',    how: 'direct equivalent' },
+  opus55:        { key: 'opus-5.5',  how: 'direct equivalent' },
   sonnet5:       { key: 'sonnet-5',  how: 'direct equivalent' },
+  sonnet55:      { key: 'sonnet-5.5', how: 'direct equivalent' },
   fable5:        { key: 'fable-5',    how: 'direct equivalent' },
+  fable51:       { key: 'fable-5.1',  how: 'direct equivalent' },
   // Google
-  gemini25pro:   { key: 'sonnet-4.6', how: 'tier match (powerful)' },
-  gemini3flash:  { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
-  gemini31pro:   { key: 'opus-4.7',   how: 'tier match (powerful)' },
-  gemini31prolc: { key: 'opus-4.7',   how: 'tier match (powerful, long ctx)' },
-  gemini35flash: { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
-  gemini36flash: { key: 'haiku-4.5', how: 'tier match (versatile)' },
-  // GitHub / Microsoft
-  raptormini:    { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
-  maicodeflash:  { key: 'haiku-4.5',  how: 'tier match (lightweight)' },
+  gemini38flash: { key: 'haiku-5.5',  how: 'tier match (versatile)' },
+  gemini4argon:  { key: 'opus-5.5',  how: 'tier match (powerful)' },
+  // Microsoft
+  maicode11flash:{ key: 'haiku-5.5',  how: 'tier match (lightweight)' },
   grok45:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
   grok45lc:      { key: 'sonnet-4.6', how: 'tier match (versatile, long ctx)' },
-  kimi27:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
+  grok46:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
+  grok46lc:      { key: 'sonnet-4.6', how: 'tier match (versatile, long ctx)' },
+  grok47:        { key: 'sonnet-4.6', how: 'tier match (versatile)' },
+  grok47lc:      { key: 'sonnet-4.6', how: 'tier match (versatile, long ctx)' },
+  kimi3:         { key: 'opus-5.5',  how: 'tier match (powerful)' },
 };
 
 // ── Third-party competitors ──────────────────────────────────────────────────
@@ -1305,8 +1307,9 @@ const THIRD_PARTY_COMPETITORS = {
   gemini: {
     name: 'Google Gemini Code Assist',
     icon: '✨',
-    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong> with quotas, not a published AI-credit pool or token overage rate. Optional Gemini API usage below is billed separately at standard per-token rates and is not Code Assist consumption.',
+    infoBanner: 'Gemini Code Assist uses a <strong>seat-based pricing model</strong> with quotas, not a published AI-credit pool or token overage rate. Optional API estimates use GitHub Copilot reference rates as an illustration; actual Gemini API pricing is separate and may differ.',
     modelsProvider: 'google',
+    modelSource: { text: 'GitHub Copilot reference model pricing', url: 'https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing' },
     plans: [
       { value: '0.031232877', name: 'Standard',   label: 'Standard — $0.031232877/user/month', selected: true },
       { value: '0.073972603',    name: 'Enterprise', label: 'Enterprise — $0.073972603/user/month' },
@@ -1316,8 +1319,9 @@ const THIRD_PARTY_COMPETITORS = {
   chatgpt: {
     name: 'OpenAI ChatGPT',
     icon: '🤖',
-    infoBanner: 'ChatGPT Business uses a <strong>seat-based pricing model</strong> with plan-specific included use. Optional workspace credits can cover in-product usage after included limits, but their rate card and Enterprise terms are contract- or feature-specific and are not modeled here. OpenAI API usage below is billed separately.',
+    infoBanner: 'ChatGPT Business uses a <strong>seat-based pricing model</strong> with plan-specific included use. Optional workspace credits can cover in-product usage after included limits, but their rate card and Enterprise terms are contract- or feature-specific and are not modeled here. API estimates use GitHub Copilot reference rates as an illustration; actual OpenAI API pricing is separate and may differ.',
     modelsProvider: 'openai',
+    modelSource: { text: 'GitHub Copilot reference model pricing', url: 'https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing' },
     plans: [
       { value: '25',  name: 'Business Standard',    label: 'Business Standard — $25/user/month', selected: true },
       { value: '125', name: 'Business Premium',     label: 'Business Premium — $125/user/month' },
@@ -1351,7 +1355,6 @@ function providerOptionsHTML() {
   return `<option value="openai">OpenAI</option>
     <option value="anthropic">Anthropic</option>
     <option value="google">Google</option>
-    <option value="github">Fine-tuned (GitHub)</option>
     <option value="microsoft">Microsoft</option>
     <option value="xai">xAI</option>
     <option value="moonshot">Moonshot AI</option>`;
@@ -1436,7 +1439,7 @@ function buildGhCreditRow(id) {
   return el;
 }
 
-function buildAntModelRow(id, defaultModel = 'sonnet-4.5') {
+function buildAntModelRow(id, defaultModel = 'sonnet-4.6') {
   const el = document.createElement('div');
   el.className = 'model-row';
   el.id = 'antrow-' + id;
@@ -1540,7 +1543,7 @@ function addAntModelRow() {
   const defaultModels = Object.keys(ANTHROPIC_MODELS);
   const lastRowModel = antRowIds.length > 1
     ? $('antrow-' + antRowIds[antRowIds.length - 2]).querySelector('[data-field="model"]').value
-    : 'sonnet-4.5';
+    : 'sonnet-4.6';
   $('antModelRowsContainer').appendChild(buildAntModelRow(id, lastRowModel));
   calculate();
 }
@@ -2430,13 +2433,12 @@ const DEFAULT_THIRD_SEATS = 10;
 // have an entry here; a console warning is emitted otherwise (see applyExampleToThird).
 const EXAMPLE_FLAGSHIP_MODEL = {
   anthropic: 'opus48',
-  openai:    'gpt55',
-  google:    'gemini31pro',
-  github:    'raptormini',
-  microsoft: 'maicodeflash',
-  xai:       'grok45lc',
-  moonshot:  'kimi27',
-  cursor:    'grok46',
+  openai:    'gpt6astra',
+  google:    'gemini4argon',
+  microsoft: 'maicode11flash',
+  xai:       'grok47lc',
+  moonshot:  'kimi3',
+  cursor:    'cursorgrok46',
 };
 
 // Returns the "equivalent of Claude Opus 4.8" model id for a provider, falling
@@ -2515,12 +2517,12 @@ function seedDefaultGhModelRow() {
   return row;
 }
 
-// Seeds the default Anthropic model row (Claude Sonnet 4.5). Shared by
+// Seeds the default Anthropic model row (Claude Sonnet 4.6). Shared by
 // init() and resetExample() so the default state stays consistent between them.
 function seedDefaultAntModelRow() {
   const id = nextId++;
   antRowIds.push(id);
-  const row = buildAntModelRow(id, 'sonnet-4.5');
+  const row = buildAntModelRow(id, 'sonnet-4.6');
   $('antModelRowsContainer').appendChild(row);
   return row;
 }
