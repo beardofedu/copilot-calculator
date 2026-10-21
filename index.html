@@ -1440,7 +1440,7 @@ function buildGhCreditRow(id) {
   return el;
 }
 
-function buildAntModelRow(id, defaultModel = 'sonnet-4.5') {
+function buildAntModelRow(id, defaultModel = 'sonnet-4.6') {
   const el = document.createElement('div');
   el.className = 'model-row';
   el.id = 'antrow-' + id;
@@ -1544,7 +1544,7 @@ function addAntModelRow() {
   const defaultModels = Object.keys(ANTHROPIC_MODELS);
   const lastRowModel = antRowIds.length > 1
     ? $('antrow-' + antRowIds[antRowIds.length - 2]).querySelector('[data-field="model"]').value
-    : 'sonnet-4.5';
+    : 'sonnet-4.6';
   $('antModelRowsContainer').appendChild(buildAntModelRow(id, lastRowModel));
   calculate();
 }
@@ -2518,12 +2518,12 @@ function seedDefaultGhModelRow() {
   return row;
 }
 
-// Seeds the default Anthropic model row (Claude Sonnet 4.5). Shared by
+// Seeds the default Anthropic model row (Claude Sonnet 4.6). Shared by
 // init() and resetExample() so the default state stays consistent between them.
 function seedDefaultAntModelRow() {
   const id = nextId++;
   antRowIds.push(id);
-  const row = buildAntModelRow(id, 'sonnet-4.5');
+  const row = buildAntModelRow(id, 'sonnet-4.6');
   $('antModelRowsContainer').appendChild(row);
   return row;
 }
