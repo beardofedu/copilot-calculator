@@ -223,7 +223,9 @@ async function main() {
   const summaryParts = [];
   summaryParts.push(changed
     ? `Updated ${changes.length} competitor price value(s):\n` + changes.map(c => `- ${c}`).join('\n')
-    : 'All competitor prices already match their public pricing pages. No changes needed.');
+    : warnings.length
+      ? 'Price check incomplete; one or more competitor prices could not be verified.'
+      : 'All competitor prices already match their public pricing pages. No changes needed.');
   if (warnings.length) {
     summaryParts.push(`Warnings (please verify manually):\n` + warnings.map(w => `- ${w}`).join('\n'));
   }
