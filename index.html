@@ -2376,37 +2376,56 @@ function calculate() {
   const antClass   = antTotal   <= minTotal + 0.005 ? 'lower' : 'higher';
   const thirdClass = thirdTotal <= minTotal + 0.005 ? 'lower' : 'higher';
 
-  $('comparisonRows').innerHTML = `
-    <tr>
-      <td>Seats (raw cost)</td>
-      <td>${fmt(rawSeatCost)} (${totalSeats} seats)</td>
-      <td>${fmt(antSeatCostRaw)} (${antSeatUsers} × ${antPlanLabel})</td>
-      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? fmt(thirdSeatCostRaw) + ` (${thirdSeatUsers} × ${thirdPlanLabel})` : ''}</td>
-    </tr>
-    <tr>
-      <td>AI credits / API usage</td>
-      <td>${fmt(includedCredits * 0.01)} (${fmtCred(includedCredits)} credits)</td>
-      <td>${antPurchasedCreditValue > 0 ? fmt(antPurchasedCreditValue) + ' purchased' : 'No credits purchased'}</td>
-      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? (thirdCompetitor.modelsProvider ? 'n/a — optional API usage below' : 'n/a — seat-based only') : ''}</td>
-    </tr>
-    <tr>
-      <td>Token / API costs</td>
-      <td>${fmt(overageCost)} overage</td>
-      <td>${antPurchasedCreditValue > 0 ? fmt(antApiOverage) + ' overage' : fmt(antTokenTotal)}</td>
-      <td class="${thirdCompetitor ? '' : 'hidden'}">${thirdCompetitor ? (thirdCompetitor.modelsProvider ? fmt(thirdTokenTotal) : 'n/a') : ''}</td>
-    </tr>
-    <tr>
-      <td><strong>Total / month</strong></td>
-      <td class="${ghClass}"><strong>${fmt(ghTotal)}</strong></td>
-      <td class="${antClass}"><strong>${fmt(antTotal)}</strong></td>
-      <td class="${thirdCompetitor ? thirdClass : 'hidden'}"><strong>${thirdCompetitor ? fmt(thirdTotal) : ''}</strong></td>
-    </tr>
-    <tr>
-      <td><strong>Total / year</strong></td>
-      <td class="${ghClass}"><strong>${fmt(ghTotal * 12)}</strong></td>
-      <td class="${antClass}"><strong>${fmt(antTotal * 12)}</strong></td>
-      <td class="${thirdCompetitor ? thirdClass : 'hidden'}"><strong>${thirdCompetitor ? fmt(thirdTotal * 12) : ''}</strong></td>
-    </tr>`;
+  const comparisonRows = [
+    [
+      { text: 'Seats (raw cost)' },
+      { text: `${fmt(rawSeatCost)} (${totalSeats} seats)` },
+      { text: `${fmt(antSeatCostRaw)} (${antSeatUsers} × ${antPlanLabel})` },
+      { text: thirdCompetitor ? `${fmt(thirdSeatCostRaw)} (${thirdSeatUsers} × ${thirdPlanLabel})` : '', className: thirdCompetitor ? '' : 'hidden' },
+    ],
+    [
+      { text: 'AI credits / API usage' },
+      { text: `${fmt(includedCredits * 0.01)} (${fmtCred(includedCredits)} credits)` },
+      { text: antPurchasedCreditValue > 0 ? `${fmt(antPurchasedCreditValue)} purchased` : 'No credits purchased' },
+      { text: thirdCompetitor ? (thirdCompetitor.modelsProvider ? 'n/a — optional API usage below' : 'n/a — seat-based only') : '', className: thirdCompetitor ? '' : 'hidden' },
+    ],
+    [
+      { text: 'Token / API costs' },
+      { text: `${fmt(overageCost)} overage` },
+      { text: antPurchasedCreditValue > 0 ? `${fmt(antApiOverage)} overage` : fmt(antTokenTotal) },
+      { text: thirdCompetitor ? (thirdCompetitor.modelsProvider ? fmt(thirdTokenTotal) : 'n/a') : '', className: thirdCompetitor ? '' : 'hidden' },
+    ],
+    [
+      { text: 'Total / month', bold: true },
+      { text: fmt(ghTotal), className: ghClass, bold: true },
+      { text: fmt(antTotal), className: antClass, bold: true },
+      { text: thirdCompetitor ? fmt(thirdTotal) : '', className: thirdCompetitor ? thirdClass : 'hidden', bold: true },
+    ],
+    [
+      { text: 'Total / year', bold: true },
+      { text: fmt(ghTotal * 12), className: ghClass, bold: true },
+      { text: fmt(antTotal * 12), className: antClass, bold: true },
+      { text: thirdCompetitor ? fmt(thirdTotal * 12) : '', className: thirdCompetitor ? thirdClass : 'hidden', bold: true },
+    ],
+  ];
+  const comparisonBody = $('comparisonRows');
+  comparisonBody.replaceChildren();
+  comparisonRows.forEach(cells => {
+    const row = document.createElement('tr');
+    cells.forEach(({ text, className, bold }) => {
+      const cell = document.createElement('td');
+      if (className) cell.className = className;
+      if (bold) {
+        const strong = document.createElement('strong');
+        strong.textContent = text;
+        cell.append(strong);
+      } else {
+        cell.textContent = text;
+      }
+      row.append(cell);
+    });
+    comparisonBody.append(row);
+  });
 }
 
 // ── Initialisation ────────────────────────────────────────────────────────────
